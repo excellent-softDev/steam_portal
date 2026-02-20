@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Courses | STEAM LMS</title>
+    
+    <!-- Favicons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/img/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicons/favicon-16x16.png">
+    <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicons/favicon.ico">
+    <link rel="manifest" href="assets/img/favicons/manifest.json">
+    <meta name="msapplication-TileImage" content="assets/img/favicons/mstile-150x150.png">
+    <meta name="theme-color" content="#ffffff">
+    
+    <!-- Stylesheets -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="assets/css/theme.css" rel="stylesheet" />
+    <link href="assets/css/user.css" rel="stylesheet" />
+    <link href="assets/css/courses.css" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- Navigation (reuse from main site) -->
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top" style="background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <img src="assets/img/logos/penreach_logo.png" height="40" alt="STEAM LMS Logo" />
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="courses.html">Courses</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.html">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link" href="instructors.html">Instructors</a></li>
+                    <li class="nav-item"><a class="nav-link" href="blog.html">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-outline-primary btn-sm me-3" type="button" data-bs-toggle="modal" data-bs-target="#searchModal">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <a class="btn btn-outline-secondary btn-sm me-3" href="admin-login.html" role="button">
+                        <i class="fas fa-user-shield me-2"></i>Admin
+                    </a>
+                    <a class="btn btn-primary btn-sm" href="#" role="button">
+                        <i class="fas fa-user me-2"></i>Sign In
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="py-5">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 text-primary">Our Courses</h1>
+                <p class="lead text-muted">Explore our comprehensive STEAM curriculum organized by grade levels</p>
+            </div>
+
+            <!-- Grade Filter -->
+            <div class="row mb-4">
+                <div class="col-md-6 mx-auto">
+                    <select class="form-select form-select-lg" id="grade-filter">
+                        <option value="">All Grades</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Categories Filter -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex flex-wrap justify-content-center gap-2" id="category-filters">
+                        <button class="btn btn-outline-primary active" data-category="all">All Categories</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="row" id="content-grid">
+                <!-- Content cards will be dynamically loaded here -->
+            </div>
+
+            <!-- Empty State -->
+            <div class="text-center py-5" id="empty-state" style="display: none;">
+                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                <h3 class="text-muted">No content found</h3>
+                <p class="text-muted">Try adjusting your filters or check back later for new content.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Content Detail Modal -->
+    <div class="modal fade" id="contentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-title">Content Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modal-content">
+                        <!-- Content details will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer (reuse from main site) -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>STEAM LMS</h5>
+                    <p>Empowering learners through Science, Technology, Engineering, Arts, and Mathematics.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="index.html" class="text-light">Home</a></li>
+                        <li><a href="courses.html" class="text-light">Courses</a></li>
+                        <li><a href="about.html" class="text-light">About Us</a></li>
+                        <li><a href="contact.html" class="text-light">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contact Info</h5>
+                    <p>Email: info@steamlms.com<br>
+                    Phone: (555) 123-4567</p>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="text-center">
+                <p>&copy; 2024 STEAM LMS. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/courses.js"></script>
+</body>
+</html>
