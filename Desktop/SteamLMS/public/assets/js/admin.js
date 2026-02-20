@@ -2081,7 +2081,7 @@ function loadAssociatedFiles(associatedFileIds) {
     `).join('');
 }
 
-async function saveContent() {
+function saveContent() {
     console.log('=== SAVE CONTENT DEBUG ===');
     
     try {
@@ -2096,7 +2096,7 @@ async function saveContent() {
         console.log('Form data:', { title, description, gradeId, categoryId, subcategoryId, contentType, contentText });
         
         if (!title || !description || !gradeId || !categoryId || !contentType) {
-            ToastManager.show('Please fill all required fields', 'warning');
+            this.showToast('Please fill all required fields', 'warning');
             return;
         }
         
@@ -2112,6 +2112,7 @@ async function saveContent() {
         console.log('Associated files:', files);
         
         const contentData = {
+            id: currentEditingId || this.generateId(),
             title,
             description,
             gradeId,
@@ -2126,29 +2127,14 @@ async function saveContent() {
         
         console.log('Saving content data:', contentData);
         
-        // Save to MySQL API
-        const url = currentEditingId ? 
-            `http://localhost:3001/api/content/${currentEditingId}` : 
-            'http://localhost:3001/api/content';
-        
-        const method = currentEditingId ? 'PUT' : 'POST';
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(contentData)
-        });
-        
-        console.log('Save response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`Save failed! Status: ${response.status}`);
+        // Save to localStorage
+        let result;
+        if (currentEditingId) {
+            result = this.db.updateContent(currentEditingId, contentData);
+        } else {
+            result = this.db.createContent(contentData);
         }
         
-        const result = await response.json();
         console.log('Save result:', result);
         
         if (result.success) {
@@ -2167,15 +2153,15 @@ async function saveContent() {
                 dashboard.loadContentData();
             }
             
-            ToastManager.show('Content saved successfully!', 'success');
+            this.showToast('Content saved successfully!', 'success');
             console.log('=== SAVE CONTENT SUCCESS ===');
         } else {
             console.error('Save error:', result.error);
-            ToastManager.show('Error saving content: ' + result.error, 'error');
+            this.showToast('Error saving content: ' + result.error, 'error');
         }
     } catch (error) {
         console.error('Unexpected error in saveContent:', error);
-        ToastManager.show('Unexpected error: ' + error.message, 'error');
+        this.showToast('Unexpected error: ' + error.message, 'error');
     }
 }
 
