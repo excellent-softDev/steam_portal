@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - SteamLMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <style>
+        .welcome-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .progress-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+        .progress-card:hover {
+            transform: translateY(-5px);
+        }
+        .achievement-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 0 auto 1rem;
+        }
+        .activity-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid #667eea;
+        }
+        .learning-path {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        .learning-step {
+            border-left: 3px solid #28a745;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        .learning-step.completed {
+            border-left-color: #28a745;
+        }
+        .learning-step.current {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+        .learning-step.locked {
+            border-left-color: #6c757d;
+            opacity: 0.6;
+        }
+        .main-content {
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        .sidebar {
+            background: #2c3e50;
+            min-height: 100vh;
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: #ecf0f1;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: #34495e;
+            color: white;
+        }
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .status-online { background-color: #28a745; }
+        .status-offline { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="p-3">
+                    <h4><i class="fas fa-graduation-cap"></i> Student</h4>
+                    <div class="text-center mb-3">
+                        <img src="https://via.placeholder.com/80" class="rounded-circle mb-2" alt="Profile">
+                        <div id="student-name">Loading...</div>
+                        <small id="student-grade">Grade: -</small>
+                    </div>
+                </div>
+                <nav class="nav flex-column p-3">
+                    <a class="nav-link active" href="#" data-section="overview">
+                        <i class="fas fa-home"></i> Overview
+                    </a>
+                    <a class="nav-link" href="#" data-section="progress">
+                        <i class="fas fa-chart-line"></i> My Progress
+                    </a>
+                    <a class="nav-link" href="#" data-section="courses">
+                        <i class="fas fa-book"></i> My Courses
+                    </a>
+                    <a class="nav-link" href="#" data-section="achievements">
+                        <i class="fas fa-trophy"></i> Achievements
+                    </a>
+                    <a class="nav-link" href="#" data-section="activity">
+                        <i class="fas fa-history"></i> Activity
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <div class="p-4">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Student Dashboard</h2>
+                        <div class="d-flex align-items-center">
+                            <span class="status-indicator status-online"></span>
+                            <span id="connection-status">Connected</span>
+                        </div>
+                    </div>
+
+                    <!-- Overview Section -->
+                    <div id="overview-section" class="dashboard-section">
+                        <!-- Welcome Card -->
+                        <div class="welcome-card">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h3>Welcome back, <span id="welcome-name">Student</span>! 👋</h3>
+                                    <p class="mb-0">Ready to continue your learning journey? You're doing great!</p>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="achievement-badge">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <h5 id="streak-count">0 Day Streak</h5>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="progress-card text-center">
+                                    <i class="fas fa-book-open fa-2x text-primary mb-2"></i>
+                                    <h5 id="courses-enrolled">0</h5>
+                                    <p class="mb-0">Courses Enrolled</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="progress-card text-center">
+                                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                    <h5 id="completed-lessons">0</h5>
+                                    <p class="mb-0">Completed Lessons</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="progress-card text-center">
+                                    <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                    <h5 id="learning-time">0h</h5>
+                                    <p class="mb-0">Learning Time</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="progress-card text-center">
+                                    <i class="fas fa-fire fa-2x text-danger mb-2"></i>
+                                    <h5 id="current-streak">0</h5>
+                                    <p class="mb-0">Day Streak</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Current Learning Path -->
+                        <div class="learning-path">
+                            <h5><i class="fas fa-route"></i> Continue Learning</h5>
+                            <div id="learning-path-content">
+                                <div class="learning-step current">
+                                    <h6>Introduction to Mathematics</h6>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar" role="progressbar" style="width: 65%">65%</div>
+                                    </div>
+                                    <small>Continue where you left off</small>
+                                </div>
+                                <div class="learning-step">
+                                    <h6>Basic Algebra</h6>
+                                    <small>Next up in your learning path</small>
+                                </div>
+                                <div class="learning-step locked">
+                                    <h6>Advanced Mathematics</h6>
+                                    <small>Complete previous lessons to unlock</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="progress-card">
+                            <h5><i class="fas fa-history"></i> Recent Activity</h5>
+                            <div id="recent-activity">
+                                <div class="activity-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Completed: Math Basics</strong>
+                                            <div class="text-muted small">2 hours ago</div>
+                                        </div>
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    </div>
+                                </div>
+                                <div class="activity-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Started: Science Introduction</strong>
+                                            <div class="text-muted small">Yesterday</div>
+                                        </div>
+                                        <i class="fas fa-play-circle text-primary"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Section -->
+                    <div id="progress-section" class="dashboard-section" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="progress-card">
+                                    <h5>Learning Progress</h5>
+                                    <canvas id="progressChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="progress-card">
+                                    <h5>Subject Breakdown</h5>
+                                    <canvas id="subjectChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress-card">
+                            <h5>Weekly Activity</h5>
+                            <canvas id="weeklyActivityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Courses Section -->
+                    <div id="courses-section" class="dashboard-section" style="display: none;">
+                        <div class="progress-card">
+                            <h5>My Courses</h5>
+                            <div class="row" id="courses-grid">
+                                <!-- Courses will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Achievements Section -->
+                    <div id="achievements-section" class="dashboard-section" style="display: none;">
+                        <div class="progress-card">
+                            <h5>My Achievements</h5>
+                            <div class="row" id="achievements-grid">
+                                <!-- Achievements will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Section -->
+                    <div id="activity-section" class="dashboard-section" style="display: none;">
+                        <div class="progress-card">
+                            <h5>Activity History</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped" id="activityTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Activity</th>
+                                            <th>Duration</th>
+                                            <th>Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/student-dashboard.js"></script>
+</body>
+</html>

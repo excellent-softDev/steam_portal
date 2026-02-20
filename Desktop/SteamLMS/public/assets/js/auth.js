@@ -72,8 +72,65 @@ class AdminAuth {
             });
         }
 
-        // Check if inputs are enabled and force enable them
+        // Fix checkbox functionality
+        const rememberCheckbox = document.getElementById('remember');
+        console.log('Remember checkbox found:', !!rememberCheckbox);
+        
+        if (rememberCheckbox) {
+            // Ensure checkbox is clickable
+            rememberCheckbox.style.pointerEvents = 'auto';
+            rememberCheckbox.style.cursor = 'pointer';
+            rememberCheckbox.disabled = false;
+            
+            rememberCheckbox.addEventListener('change', (e) => {
+                console.log('Checkbox changed:', e.target.checked);
+            });
+        }
+
+        // Fix sign in button
+        const signInButton = document.querySelector('.btn-login');
+        console.log('Sign in button found:', !!signInButton);
+        
+        if (signInButton) {
+            // Ensure button is clickable
+            signInButton.style.pointerEvents = 'auto';
+            signInButton.style.cursor = 'pointer';
+            signInButton.disabled = false;
+            
+            // Add click handler as backup
+            signInButton.addEventListener('click', (e) => {
+                console.log('=== AUTH DEBUG: Button clicked ===');
+                e.preventDefault();
+                this.handleLogin();
+            });
+        }
+
+        // Fix email input
         const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.style.pointerEvents = 'auto';
+            emailInput.style.cursor = 'pointer';
+            emailInput.disabled = false;
+            emailInput.readOnly = false;
+            
+            emailInput.addEventListener('click', () => {
+                emailInput.focus();
+            });
+        }
+
+        // Fix password input
+        if (passwordInput) {
+            passwordInput.style.pointerEvents = 'auto';
+            passwordInput.style.cursor = 'pointer';
+            passwordInput.disabled = false;
+            passwordInput.readOnly = false;
+            
+            passwordInput.addEventListener('click', () => {
+                passwordInput.focus();
+            });
+        }
+
+        // Check if inputs are enabled and force enable them
         if (emailInput) {
             console.log('Email input found:', !!emailInput);
             console.log('Email input disabled:', emailInput.disabled);
