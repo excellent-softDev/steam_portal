@@ -1,0 +1,46 @@
+<!-- Grade Management Modal -->
+<div class="modal fade" id="gradeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-graduation-cap me-2"></i>
+                    <span id="grade-modal-title">Add New Grade</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="gradeForm">
+                    <input type="hidden" id="grade-id">
+                    
+                    <div class="mb-3">
+                        <label for="grade-name" class="form-label">Grade Name *</label>
+                        <input type="text" class="form-control" id="grade-name" required 
+                               placeholder="e.g., Grade 1, Kindergarten, 9th Grade">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="grade-age-range" class="form-label">Age Range *</label>
+                        <input type="text" class="form-control" id="grade-age-range" required 
+                               placeholder="e.g., 5-6 years, 14-15 years">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="grade-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="grade-description" rows="3" 
+                                  placeholder="Describe the grade level and learning objectives..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="delete-grade-btn" style="display: none;">
+                    <i class="fas fa-trash me-2"></i>Delete
+                </button>
+                <button type="button" class="btn btn-primary" id="save-grade-btn">
+                    <i class="fas fa-save me-2"></i><span id="grade-save-text">Add Grade</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

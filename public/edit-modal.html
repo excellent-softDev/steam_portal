@@ -1,0 +1,78 @@
+<!-- Edit Content Modal -->
+<div class="modal fade" id="editContentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>
+                    <span id="modal-title">Edit Content</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editContentForm">
+                    <input type="hidden" id="edit-content-id">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit-content-title" class="form-label">Title *</label>
+                            <input type="text" class="form-control" id="edit-content-title" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit-content-type" class="form-label">Content Type *</label>
+                            <select class="form-select" id="edit-content-type" required>
+                                <option value="lesson">Lesson</option>
+                                <option value="assignment">Assignment</option>
+                                <option value="resource">Resource</option>
+                                <option value="video">Video</option>
+                                <option value="quiz">Quiz</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit-content-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit-content-description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit-content-grade" class="form-label">Grade Level *</label>
+                            <select class="form-select" id="edit-content-grade" required>
+                                <option value="">Select Grade</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit-content-category" class="form-label">Category *</label>
+                            <select class="form-select" id="edit-content-category" required>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit-content-text" class="form-label">Content Text</label>
+                        <textarea class="form-control" id="edit-content-text" rows="6" placeholder="Enter the main content text here..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Files</label>
+                        <div class="border rounded p-3 bg-light">
+                            <p class="text-muted mb-2">File upload functionality would be implemented here</p>
+                            <small class="text-muted">Support for PDFs, images, videos, and documents</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="delete-content-btn">
+                    <i class="fas fa-trash me-2"></i>Delete
+                </button>
+                <button type="button" class="btn btn-primary" id="save-content-btn">
+                    <i class="fas fa-save me-2"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

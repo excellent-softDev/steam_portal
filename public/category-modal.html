@@ -1,0 +1,94 @@
+<!-- Enhanced Category Management Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-tags me-2"></i>
+                    <span id="category-modal-title">Add New Category</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <input type="hidden" id="category-id">
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label for="category-name" class="form-label">Category Name *</label>
+                            <input type="text" class="form-control" id="category-name" required 
+                                   placeholder="e.g., Mathematics, Science, Technology, Engineering, Arts">
+                            <div class="form-text">Enter a descriptive name for the STEAM category</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="category-color" class="form-label">Color Theme</label>
+                            <select class="form-select" id="category-color">
+                                <option value="">Select Color</option>
+                                <option value="#FF6B6B">🟡 Yellow</option>
+                                <option value="#4ECDC4">🟢 Green</option>
+                                <option value="#339AF0">🔵 Blue</option>
+                                <option value="#F44336">🔴 Red</option>
+                                <option value="#9B59B6">🟣 Purple</option>
+                                <option value="#FF9800">🟠 Orange</option>
+                                <option value="#6C757D">🟦 Brown</option>
+                                <option value="#17A2B8">🟦 Dark Blue</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="category-description" rows="4" 
+                                  placeholder="Describe the learning objectives, topics, and skills covered in this STEAM category..."></textarea>
+                        <div class="form-text">Provide details about what students will learn and the key concepts covered</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="category-icon" class="form-label">Icon</label>
+                            <select class="form-select" id="category-icon">
+                                <option value="">Select Icon</option>
+                                <option value="fa-calculator">🧮 Calculator</option>
+                                <option value="fa-flask">🧪 Science</option>
+                                <option value="fa-laptop-code">💻 Technology</option>
+                                <option value="fa-cogs">⚙️ Engineering</option>
+                                <option value="fa-palette">🎨 Arts</option>
+                                <option value="fa-book">📚 General</option>
+                                <option value="fa-graduation-cap">🎓 Education</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="category-order" class="form-label">Display Order</label>
+                            <input type="number" class="form-control" id="category-order" 
+                                   min="1" max="99" value="1"
+                                   placeholder="Order for display (1 = first)">
+                            <div class="form-text">Lower numbers appear first in the list</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <input type="checkbox" class="form-check-input" id="category-active" checked>
+                            <label class="form-check-label" for="category-active">
+                                <strong>Active Category</strong>
+                                <span class="text-muted">(Students can select this category when creating content)</span>
+                            </label>
+                        </label>
+                        <div class="form-text">When checked, this category will be available for content creation</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="delete-category-btn" style="display: none;">
+                    <i class="fas fa-trash me-2"></i>Delete
+                </button>
+                <button type="button" class="btn btn-primary" id="save-category-btn">
+                    <i class="fas fa-save me-2"></i><span id="category-save-text">Add Category</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
