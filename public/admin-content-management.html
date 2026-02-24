@@ -15,10 +15,100 @@
     <link href="assets/css/admin.css" rel="stylesheet">
     
     <style>
+        :root {
+            --admin-primary: #10203F;
+            --admin-secondary: #2257BF;
+            --admin-accent: #3498db;
+            --admin-success: #27ae60;
+            --admin-warning: #f39c12;
+            --admin-danger: #e74c3c;
+            --admin-light: #f8f9fa;
+            --admin-dark: #2c3e50;
+        }
+        
+        body {
+            background: var(--admin-light);
+            font-family: 'Rubik', sans-serif;
+        }
+        
+        .dashboard-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .dashboard-card.primary { border-left-color: #00B2FF; }
+        .dashboard-card.success { border-left-color: #889922; }
+        .dashboard-card.warning { border-left-color: #ffc107; }
+        .dashboard-card.danger { border-left-color: #E51717; }
+        .dashboard-card.info { border-left-color: #003294; }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .quick-action-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .quick-action-card:hover {
+            border-color: #00B2FF;
+            transform: translateY(-3px);
+        }
+        
         .content-card {
             transition: all 0.3s ease;
-            cursor: move;
+            border-left: 4px solid transparent;
+            height: 100%;
         }
+        .content-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .content-card.published { border-left-color: var(--admin-success); }
+        .content-card.draft { border-left-color: var(--admin-warning); }
+        .content-card.archived { border-left-color: var(--admin-danger); }
+        
+        .filter-section {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn-action {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .content-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+        
+        .meta-badge {
+            background: var(--admin-light);
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            color: var(--admin-dark);
+        }
+        
         .content-card.dragging {
             opacity: 0.5;
             transform: rotate(5deg);
@@ -185,6 +275,721 @@
             line-height: 1.2;
             border-radius: 0.2rem;
         }
+        
+        .advanced-filters {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 1px solid #e9ecef;
+        }
+        
+        .search-summary {
+            font-size: 0.9rem;
+        }
+        
+        .search-summary strong {
+            color: #00B2FF;
+        }
+        
+        .sort-options {
+            display: flex;
+            align-items: center;
+        }
+        
+        .form-select-sm {
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .filter-section {
+            position: relative;
+        }
+        
+        .filter-section .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        
+        .filter-section .form-label i {
+            color: #00B2FF;
+            font-size: 0.875rem;
+        }
+        
+        .filter-section .text-muted {
+            font-size: 0.8rem;
+        }
+        
+        .gap-2 {
+            gap: 0.5rem;
+        }
+        
+        .w-auto {
+            width: auto;
+        }
+        
+        /* Advanced File Upload Styles */
+        .file-upload-area {
+            border: 2px dashed #00B2FF;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+            min-height: 200px;
+        }
+        
+        .file-upload-area:hover {
+            border-color: #003294;
+            background: linear-gradient(135deg, #e3f2fd 0%, #d1e7ff 100%);
+            transform: scale(1.02);
+        }
+        
+        .file-upload-header {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .file-type-limit {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .file-type-limit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 178, 255, 0.15);
+        }
+        
+        .file-type-limit i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .limit-info strong {
+            display: block;
+            font-size: 1.2rem;
+            color: #495057;
+        }
+        
+        .limit-info small {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+        
+        .file-preview-container {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+            padding: 15px;
+        }
+        
+        .file-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            min-height: 200px;
+        }
+        
+        .file-preview-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .file-preview-item {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .file-preview-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #00B2FF;
+        }
+        
+        .file-preview-item img,
+        .file-preview-item video {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .file-preview-item audio {
+            width: 100%;
+            height: 60px;
+            border-radius: 4px;
+        }
+        
+        .file-preview-item .file-info {
+            margin-top: 8px;
+            font-size: 0.8rem;
+        }
+        
+        .file-preview-item .file-name {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .file-preview-item .file-size {
+            color: #6c757d;
+            font-size: 0.75rem;
+        }
+        
+        .file-preview-item .remove-file {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .file-preview-item:hover .remove-file {
+            opacity: 1;
+        }
+        
+        .upload-progress-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .progress {
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00B2FF 0%, #003294 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .progress-text {
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .upload-status {
+            margin-top: 10px;
+            color: #495057;
+        }
+        
+        .upload-status i {
+            color: #00B2FF;
+        }
+        
+        /* Document Preview Styles */
+        .document-preview {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .document-info {
+            margin-top: 10px;
+        }
+        
+        .document-info strong {
+            color: #dc3545;
+            font-size: 1rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .document-name {
+            color: #495057;
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+        
+        .unknown-preview {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        /* Animation for file preview items */
+        .file-preview-item {
+            animation: fadeInUp 0.3s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Active state for preview mode buttons */
+        .btn-group .btn.active {
+            background-color: #00B2FF;
+            border-color: #00B2FF;
+            color: white;
+        }
+        
+        /* Categories Management Styles */
+        .categories-list, .subcategories-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .category-item, .subcategory-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .category-item:hover, .subcategory-item:hover {
+            border-color: #00B2FF;
+            box-shadow: 0 2px 8px rgba(0, 178, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .category-item.selected {
+            border-color: #00B2FF;
+            background: #f8f9ff;
+        }
+        
+        .category-info, .subcategory-info {
+            flex-grow: 1;
+        }
+        
+        .category-name, .subcategory-name {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 4px;
+        }
+        
+        .category-key, .subcategory-count {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .category-actions, .subcategory-actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .btn-xs {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 0.2rem;
+        }
+        
+        .stat-item {
+            padding: 10px;
+        }
+        
+        .stat-item h4 {
+            margin-bottom: 0;
+            font-weight: 700;
+        }
+        
+        .form-select-sm.w-auto {
+            min-width: 200px;
+        }
+        
+        /* Custom scrollbar for lists */
+        .categories-list::-webkit-scrollbar,
+        .subcategories-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .categories-list::-webkit-scrollbar-track,
+        .subcategories-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .categories-list::-webkit-scrollbar-thumb,
+        .subcategories-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        .categories-list::-webkit-scrollbar-thumb:hover,
+        .subcategories-list::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Ultra-Efficient Design System */
+        .hero-efficient {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-main {
+            flex: 1;
+        }
+
+        .hero-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-efficient {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid #e9ecef;
+            background: white;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-efficient:hover {
+            border-color: #00B2FF;
+            background: #f8f9ff;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary-efficient {
+            border-color: #00B2FF;
+            background: #00B2FF;
+            color: white;
+        }
+
+        .btn-primary-efficient:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary-efficient {
+            border-color: #6c757d;
+            color: #6c757d;
+        }
+
+        .btn-secondary-efficient:hover {
+            background: #f8f9fa;
+            color: #495057;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .stat-item-efficient {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .stat-number-efficient {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label-efficient {
+            font-size: 0.75rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        /* Ultra-Efficient Filter Section */
+        .filter-efficient {
+            background: white;
+            border-radius: 6px;
+            padding: 1rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            margin-bottom: 1rem;
+        }
+
+        .filter-header-efficient {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .filter-title-efficient {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .filter-controls-efficient {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .input-efficient {
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            background: white;
+            transition: all 0.15s ease;
+            flex: 1;
+        }
+
+        .input-efficient:focus {
+            outline: none;
+            border-color: #00B2FF;
+            box-shadow: 0 0 0 0.2rem rgba(0,178,255,0.15);
+        }
+
+        .select-efficient {
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            background: white;
+            transition: all 0.15s ease;
+        }
+
+        .select-efficient:focus {
+            outline: none;
+            border-color: #00B2FF;
+            box-shadow: 0 0 0 0.2rem rgba(0,178,255,0.15);
+        }
+
+        .btn-filter-efficient {
+            padding: 0.375rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid #e9ecef;
+            background: white;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-filter-efficient:hover {
+            border-color: #00B2FF;
+            background: #f8f9ff;
+            color: #00B2FF;
+        }
+
+        .btn-filter-efficient.active {
+            background: #00B2FF;
+            color: white;
+        }
+
+        /* Ultra-Efficient Content Grid */
+        .content-grid-efficient {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .content-item-efficient {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 1rem;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .content-item-efficient:hover {
+            border-color: #00B2FF;
+            box-shadow: 0 4px 12px rgba(0,178,255,0.1);
+            transform: translateY(-1px);
+        }
+
+        .content-header-efficient {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .content-title-efficient {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .content-meta-efficient {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .meta-item-efficient {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        .content-description-efficient {
+            color: #6c757d;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            flex: 1;
+            min-height: 2.8rem;
+        }
+
+        .content-actions-efficient {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .action-btn-efficient {
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid #e9ecef;
+            background: white;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .action-btn-efficient:hover {
+            border-color: #00B2FF;
+            background: #f8f9ff;
+            color: #00B2FF;
+        }
+
+        .action-edit { color: #00B2FF; }
+        .action-view { color: #17a2b8; }
+        .action-delete { color: #dc3545; }
+        .action-feature { color: #ffc107; }
+
+        /* Performance Optimizations */
+        * {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            scrollbar-width: thin;
+            scrollbar-color: #e9ecef;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f8f9fa;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        /* Remove all animations for maximum speed */
+        .content-item-efficient,
+        .btn-efficient,
+        .input-efficient,
+        .select-efficient {
+            animation: none !important;
+            transition: none !important;
+        }
+
+        .content-item-efficient:hover,
+        .btn-efficient:hover,
+        .input-efficient:focus,
+        .select-efficient:focus {
+            transition: all 0.15s ease;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1a1a1a;
+                color: #e9ecef;
+            }
+            
+            .hero-efficient,
+            .filter-efficient,
+            .content-item-efficient {
+                background: #2d2d2d;
+                border-color: #404040;
+            }
+            
+            .btn-primary-efficient {
+                background: #0056b3;
+            }
+        }
     </style>
 </head>
 <body>
@@ -199,6 +1004,9 @@
                 <a href="admin-dashboard.html" class="btn btn-outline-primary btn-sm me-2">
                     <i class="fas fa-tachometer-alt me-1"></i> Dashboard
                 </a>
+                <button class="btn btn-outline-secondary btn-sm me-2" onclick="showManageCategoriesModal()">
+                    <i class="fas fa-tags me-1"></i> Manage Categories
+                </button>
                 <button class="btn btn-danger btn-sm" onclick="logout()">
                     <i class="fas fa-sign-out-alt me-1"></i> Logout
                 </button>
@@ -207,27 +1015,88 @@
     </nav>
 
     <div class="container-fluid mt-4">
-        <!-- Page Header -->
+        <!-- Admin Dashboard Style Hero Section -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h1 class="h3 mb-0">
-                            <i class="fas fa-folder-open text-primary me-2"></i>
-                            Content Management
-                        </h1>
+                        <h2 class="mb-1">Content Management</h2>
                         <p class="text-muted mb-0">Manage your STEAM educational content</p>
                     </div>
-                    <div>
-                        <button class="btn btn-outline-secondary btn-sm me-2" onclick="debugCategories()">
-                            <i class="fas fa-bug me-2"></i>Debug
-                        </button>
-                        <button class="btn btn-success me-2" onclick="showBulkUploadModal()">
-                            <i class="fas fa-upload me-2"></i>Bulk Upload
-                        </button>
+                    <div class="d-flex gap-2">
                         <button class="btn btn-primary" onclick="showContentModal()">
                             <i class="fas fa-plus me-2"></i>Add Content
                         </button>
+                        <button class="btn btn-outline-secondary" onclick="showBulkUploadModal()">
+                            <i class="fas fa-upload me-2"></i>Bulk Upload
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="showManageCategoriesModal()">
+                            <i class="fas fa-tags me-2"></i>Categories
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card dashboard-card primary">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-0" id="totalContentCount">0</h3>
+                                <p class="text-muted mb-0">Total Content</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card dashboard-card success">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon bg-success bg-opacity-10 text-success me-3">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-0" id="publishedContentCount">0</h3>
+                                <p class="text-muted mb-0">Published</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card dashboard-card warning">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-0" id="draftContentCount">0</h3>
+                                <p class="text-muted mb-0">Drafts</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card dashboard-card info">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon bg-info bg-opacity-10 text-info me-3">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-0" id="featuredContentCount">0</h3>
+                                <p class="text-muted mb-0">Featured</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -260,58 +1129,119 @@
             </div>
         </div>
 
-        <!-- Filters Section -->
+        <!-- Filter Section -->
         <div class="filter-section">
             <div class="row">
-                <div class="col-md-3">
-                    <label class="form-label">Search</label>
-                    <input type="text" class="form-control" id="searchInput" placeholder="Search content...">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Search Content</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" id="searchInput" 
+                                   placeholder="Search by title, description, tags..." 
+                                   onkeyup="handleSearchKeyup(event)">
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">State</label>
-                    <select class="form-select" id="stateFilter">
-                        <option value="">All States</option>
-                        <option value="draft">Draft</option>
-                        <option value="published">Published</option>
-                        <option value="archived">Archived</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Categories</label>
-                    <select class="form-select" id="categoryFilter" multiple>
-                        <!-- Categories will be populated by JavaScript -->
-                    </select>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="stateFilter" onchange="applyFilters()">
+                            <option value="">All Status</option>
+                            <option value="published">Published</option>
+                            <option value="draft">Draft</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Grade Level</label>
-                    <select class="form-select" id="gradeFilter">
-                        <option value="">All Grades</option>
-                        <option value="grade1">Grade 1</option>
-                        <option value="grade2">Grade 2</option>
-                        <option value="grade3">Grade 3</option>
-                        <option value="grade4">Grade 4</option>
-                        <option value="grade5">Grade 5</option>
-                        <option value="grade6">Grade 6</option>
-                        <option value="grade7">Grade 7</option>
-                        <option value="grade8">Grade 8</option>
-                        <option value="grade9">Grade 9</option>
-                        <option value="grade10">Grade 10</option>
-                        <option value="grade11">Grade 11</option>
-                        <option value="grade12">Grade 12</option>
-                        <option value="postmatric">Post-Matric</option>
-                    </select>
+                    <div class="mb-3">
+                        <label class="form-label">Grade Level</label>
+                        <select class="form-select" id="gradeFilter" onchange="applyFilters()">
+                            <option value="">All Grades</option>
+                            <option value="grade1">Grade 1</option>
+                            <option value="grade2">Grade 2</option>
+                            <option value="grade3">Grade 3</option>
+                            <option value="grade4">Grade 4</option>
+                            <option value="grade5">Grade 5</option>
+                            <option value="grade6">Grade 6</option>
+                            <option value="grade7">Grade 7</option>
+                            <option value="grade8">Grade 8</option>
+                            <option value="grade9">Grade 9</option>
+                            <option value="grade10">Grade 10</option>
+                            <option value="grade11">Grade 11</option>
+                            <option value="grade12">Grade 12</option>
+                            <option value="postmatric">Post-Matric</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-outline-primary w-100" onclick="applyFilters()">
-                        <i class="fas fa-filter me-1"></i> Apply Filters
+                    <div class="mb-3">
+                        <label class="form-label">Featured</label>
+                        <select class="form-select" id="featuredFilter" onchange="applyFilters()">
+                            <option value="">All Content</option>
+                            <option value="featured">Featured Only</option>
+                            <option value="not-featured">Not Featured</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-3">
+                        <label class="form-label">Sort By</label>
+                        <select class="form-select" id="sortBy" onchange="applyFilters()">
+                            <option value="lastUpdated">Last Updated</option>
+                            <option value="createdDate">Created Date</option>
+                            <option value="title">Title</option>
+                            <option value="state">State</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="toggleAdvancedFilters()">
+                        <i class="fas fa-sliders-h me-1"></i>Advanced Filters
                     </button>
+                </div>
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()">
+                        <i class="fas fa-undo me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Advanced Filters (Hidden by Default) -->
+            <div id="advancedFilters" class="mt-3" style="display: none;">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Categories</label>
+                            <select class="form-select" id="categoryFilter" multiple>
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Date Range</label>
+                            <select class="form-select" id="dateRangeFilter">
+                                <option value="">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="quarter">This Quarter</option>
+                                <option value="year">This Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Content Grid -->
-        <div class="content-grid" id="contentGrid">
+        <div class="row" id="contentGrid">
             <!-- Content cards will be dynamically generated -->
         </div>
     </div>
@@ -413,14 +1343,112 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Files</label>
+                            <label class="form-label">
+                                <i class="fas fa-cloud-upload-alt me-1"></i>Files
+                                <span class="badge bg-primary ms-2" id="fileCount">0 files</span>
+                            </label>
+                            
+                            <!-- Advanced File Upload Area -->
                             <div class="file-upload-area" id="fileUploadArea">
-                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">Drag and drop files here or click to browse</p>
-                                <p class="text-muted small">Support: Videos, PDFs, Audio, Images (Max 4 videos + PDFs)</p>
-                                <input type="file" id="fileInput" multiple accept="video/*,.pdf,audio/*,image/*" style="display: none;">
+                                <div class="file-upload-header">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <i class="fas fa-cloud-upload-alt fa-2x text-primary"></i>
+                                            <h6 class="mb-0">Advanced File Upload</h6>
+                                            <p class="text-muted mb-0">Drag & drop or click to browse</p>
+                                        </div>
+                                        <div class="text-end">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm me-2" 
+                                                    onclick="clearAllFiles()" title="Clear all files">
+                                                <i class="fas fa-times"></i> Clear All
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                    onclick="document.getElementById('fileInput').click()" title="Browse files">
+                                                <i class="fas fa-folder-open"></i> Browse
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- File Type Limits -->
+                                    <div class="row text-center mb-3">
+                                        <div class="col-md-3">
+                                            <div class="file-type-limit">
+                                                <i class="fas fa-video text-primary"></i>
+                                                <div class="limit-info">
+                                                    <strong>4</strong> Videos
+                                                    <small>Max</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="file-type-limit">
+                                                <i class="fas fa-file-pdf text-danger"></i>
+                                                <div class="limit-info">
+                                                    <strong>10</strong> PDFs
+                                                    <small>Max</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="file-type-limit">
+                                                <i class="fas fa-volume-up text-success"></i>
+                                                <div class="limit-info">
+                                                    <strong>5</strong> Audio
+                                                    <small>Max</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="file-type-limit">
+                                                <i class="fas fa-image text-warning"></i>
+                                                <div class="limit-info">
+                                                    <strong>10</strong> Images
+                                                    <small>Max</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <input type="file" id="fileInput" multiple 
+                                       accept="video/*,.pdf,audio/*,image/*" 
+                                       style="display: none;">
                             </div>
-                            <div id="filePreview" class="mt-3"></div>
+                            
+                            <!-- Enhanced File Preview Area -->
+                            <div id="filePreview" class="mt-3">
+                                <div class="file-preview-container">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0">File Preview</h6>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="togglePreviewMode('grid')">
+                                                <i class="fas fa-th"></i> Grid
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="togglePreviewMode('list')">
+                                                <i class="fas fa-list"></i> List
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- File Preview Grid/List -->
+                                    <div id="filePreviewGrid" class="file-preview-grid">
+                                        <!-- Files will be dynamically added here -->
+                                    </div>
+                                    
+                                    <!-- Upload Progress -->
+                                    <div id="uploadProgress" class="upload-progress-container" style="display: none;">
+                                        <div class="progress mb-3">
+                                            <div class="progress-bar" role="progressbar" style="width: 0%">
+                                                <span class="progress-text">0%</span>
+                                            </div>
+                                        </div>
+                                        <div class="upload-status text-center">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>
+                                            <span id="uploadStatusText">Uploading files...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="form-check">
@@ -522,6 +1550,144 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="downloadBtn">
                         <i class="fas fa-download me-2"></i>Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Categories Modal -->
+    <div class="modal fade" id="manageCategoriesModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-tags me-2"></i>Manage Categories & Subcategories
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Categories Section -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-folder me-2"></i>Categories
+                                    </h6>
+                                    <button class="btn btn-sm btn-primary" onclick="showAddCategoryForm()">
+                                        <i class="fas fa-plus me-1"></i>Add Category
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Add Category Form (Initially Hidden) -->
+                                    <div id="addCategoryForm" class="mb-3" style="display: none;">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="newCategoryName" 
+                                                   placeholder="Enter category name...">
+                                            <input type="text" class="form-control" id="newCategoryKey" 
+                                                   placeholder="Enter category key...">
+                                            <button class="btn btn-success" onclick="addCategory()">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-secondary" onclick="hideAddCategoryForm()">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Categories List -->
+                                    <div id="categoriesList" class="categories-list">
+                                        <!-- Categories will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Subcategories Section -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-tags me-2"></i>Subcategories
+                                    </h6>
+                                    <div>
+                                        <select class="form-select form-select-sm d-inline-block w-auto me-2" id="categoryForSubcategory">
+                                            <option value="">Select Category</option>
+                                        </select>
+                                        <button class="btn btn-sm btn-primary" onclick="showAddSubcategoryForm()" 
+                                                id="addSubcategoryBtn" disabled>
+                                            <i class="fas fa-plus me-1"></i>Add Subcategory
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Add Subcategory Form (Initially Hidden) -->
+                                    <div id="addSubcategoryForm" class="mb-3" style="display: none;">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="newSubcategoryName" 
+                                                   placeholder="Enter subcategory name...">
+                                            <button class="btn btn-success" onclick="addSubcategory()">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-secondary" onclick="hideAddSubcategoryForm()">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Subcategories List -->
+                                    <div id="subcategoriesList" class="subcategories-list">
+                                        <div class="text-muted text-center py-4">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Select a category to view and manage subcategories
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Statistics Section -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-3">
+                                            <div class="stat-item">
+                                                <h4 class="text-primary" id="totalCategoriesCount">0</h4>
+                                                <small class="text-muted">Total Categories</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat-item">
+                                                <h4 class="text-success" id="totalSubcategoriesCount">0</h4>
+                                                <small class="text-muted">Total Subcategories</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat-item">
+                                                <h4 class="text-warning" id="avgSubcategoriesCount">0</h4>
+                                                <small class="text-muted">Avg Subcategories/Category</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat-item">
+                                                <h4 class="text-info" id="contentItemsCount">0</h4>
+                                                <small class="text-muted">Content Items</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="exportCategories()">
+                        <i class="fas fa-download me-2"></i>Export Categories
                     </button>
                 </div>
             </div>

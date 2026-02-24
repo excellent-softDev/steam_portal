@@ -312,8 +312,8 @@ class AdminDashboard {
 
     // Dashboard action methods
     manageCategories() {
-        // This would open a category management modal or navigate to category page
-        alert('Category management feature coming soon!');
+        // Navigate to dedicated categories management page
+        window.location.href = 'admin-categories-management.html';
     }
 
     viewUsers() {

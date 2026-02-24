@@ -8,9 +8,104 @@ class ContentManagementUI {
         this.bulkFiles = [];
         this.draggedElement = null;
         
+        // Search and filtering
+        this.searchIndex = new Map();
+        this.currentFilters = {};
+        this.lastSearchTime = 0;
+        this.searchTimeout = null;
+        
+        // Advanced file management
+        this.previewMode = 'grid';
+        this.fileTypeLimits = {
+            video: 4,
+            document: 10,
+            audio: 5,
+            image: 10
+        };
+        this.currentFileTypeCounts = {
+            video: 0,
+            document: 0,
+            audio: 0,
+            image: 0
+        };
+        this.uploadProgress = 0;
+        this.isUploading = false;
+        
+        // Categories management
+        this.selectedCategory = null;
+        this.editingCategory = null;
+        this.editingSubcategory = null;
+        
         this.initializeEventListeners();
         this.loadCategories();
+        this.buildSearchIndex();
         this.renderContent();
+        
+        // Check if we should open categories modal
+        this.checkUrlParameters();
+    }
+
+    // Search Indexing for Performance
+    buildSearchIndex() {
+        console.log('Building search index...');
+        const startTime = performance.now();
+        
+        this.searchIndex.clear();
+        
+        this.cms.contents.forEach(content => {
+            const indexData = {
+                id: content.id,
+                title: content.title.toLowerCase(),
+                description: content.description.toLowerCase(),
+                tags: (content.tags || []).map(tag => tag.toLowerCase()),
+                categories: content.categories || [],
+                subcategories: content.subcategories || [],
+                gradeLevels: content.gradeLevels || [],
+                state: content.state,
+                featured: content.featured || false,
+                createdAt: new Date(content.createdAt),
+                updatedAt: new Date(content.updatedAt),
+                fileTypes: this.extractFileTypes(content.files || [])
+            };
+            
+            this.searchIndex.set(content.id, indexData);
+        });
+        
+        const endTime = performance.now();
+        console.log(`Search index built in ${(endTime - startTime).toFixed(2)}ms for ${this.cms.contents.length} items`);
+    }
+
+    extractFileTypes(files) {
+        const types = new Set();
+        files.forEach(file => {
+            if (file.type) {
+                types.add(file.type);
+            }
+        });
+        return Array.from(types);
+    }
+
+    updateSearchIndex(contentId, content) {
+        const indexData = {
+            id: content.id,
+            title: content.title.toLowerCase(),
+            description: content.description.toLowerCase(),
+            tags: (content.tags || []).map(tag => tag.toLowerCase()),
+            categories: content.categories || [],
+            subcategories: content.subcategories || [],
+            gradeLevels: content.gradeLevels || [],
+            state: content.state,
+            featured: content.featured || false,
+            createdAt: new Date(content.createdAt),
+            updatedAt: new Date(content.updatedAt),
+            fileTypes: this.extractFileTypes(content.files || [])
+        };
+        
+        this.searchIndex.set(contentId, indexData);
+    }
+
+    removeFromSearchIndex(contentId) {
+        this.searchIndex.delete(contentId);
     }
 
     initializeEventListeners() {
@@ -19,6 +114,18 @@ class ContentManagementUI {
         document.getElementById('stateFilter').addEventListener('change', () => this.applyFilters());
         document.getElementById('categoryFilter').addEventListener('change', () => this.applyFilters());
         document.getElementById('gradeFilter').addEventListener('change', () => this.applyFilters());
+        
+        // Advanced filters
+        document.getElementById('fileTypeFilter').addEventListener('change', () => this.applyFilters());
+        document.getElementById('subcategoryFilter').addEventListener('change', () => this.applyFilters());
+        document.getElementById('dateRangeFilter').addEventListener('change', (e) => {
+            this.handleDateRangeChange(e.target.value);
+            this.applyFilters();
+        });
+        document.getElementById('dateFrom').addEventListener('change', () => this.applyFilters());
+        document.getElementById('dateTo').addEventListener('change', () => this.applyFilters());
+        document.getElementById('featuredFilter').addEventListener('change', () => this.applyFilters());
+        document.getElementById('sortBy').addEventListener('change', () => this.applyFilters());
 
         // File upload
         const fileUploadArea = document.getElementById('fileUploadArea');
@@ -418,14 +525,79 @@ class ContentManagementUI {
     }
 
     processFiles(files) {
+        this.resetFileTypeCounts();
         this.uploadedFiles = [];
-        const preview = document.getElementById('filePreview');
+        const preview = document.getElementById('filePreviewGrid');
         preview.innerHTML = '';
-
-        files.forEach(file => {
+        
+        // Validate file limits
+        const validFiles = this.validateFiles(files);
+        if (validFiles.length === 0) {
+            this.showToast('No valid files selected. Please check file type limits.', 'error');
+            return;
+        }
+        
+        // Process each file
+        validFiles.forEach((file, index) => {
             const fileInfo = this.processFile(file);
             this.uploadedFiles.push(fileInfo);
-            preview.appendChild(this.createFilePreview(fileInfo));
+            this.updateFileTypeCount(fileInfo.type, 1);
+            
+            // Add preview with delay for animation effect
+            setTimeout(() => {
+                preview.appendChild(this.createEnhancedFilePreview(fileInfo, index));
+            }, index * 100);
+        });
+        
+        this.updateFileCount();
+        this.updateFileTypeLimits();
+    }
+
+    validateFiles(files) {
+        const validFiles = [];
+        const tempCounts = { video: 0, document: 0, audio: 0, image: 0 };
+        
+        Array.from(files).forEach(file => {
+            const fileType = this.getFileType(file);
+            
+            // Check file type limits
+            if (tempCounts[fileType] < this.fileTypeLimits[fileType]) {
+                validFiles.push(file);
+                tempCounts[fileType]++;
+            } else {
+                this.showToast(`File type limit exceeded: ${fileType} (max: ${this.fileTypeLimits[fileType]})`, 'error');
+            }
+        });
+        
+        return validFiles;
+    }
+
+    resetFileTypeCounts() {
+        this.currentFileTypeCounts = { video: 0, document: 0, audio: 0, image: 0 };
+    }
+
+    updateFileTypeCount(type, delta) {
+        this.currentFileTypeCounts[type] += delta;
+    }
+
+    updateFileCount() {
+        const fileCount = document.getElementById('fileCount');
+        if (fileCount) {
+            fileCount.textContent = `${this.uploadedFiles.length} files`;
+        }
+    }
+
+    updateFileTypeLimits() {
+        // Update visual indicators for file type limits
+        Object.keys(this.currentFileTypeCounts).forEach(type => {
+            const limit = this.fileTypeLimits[type];
+            const count = this.currentFileTypeCounts[type];
+            const percentage = (count / limit) * 100;
+            
+            // Update UI to show接近 limits
+            if (percentage >= 80) {
+                this.showToast(`Warning: ${type} files near limit (${count}/${limit})`, 'warning');
+            }
         });
     }
 
@@ -469,21 +641,499 @@ class ContentManagementUI {
         return 'other';
     }
 
-    createFilePreview(fileInfo) {
-        const preview = document.createElement('div');
-        preview.className = 'd-inline-block position-relative me-2 mb-2';
+    createEnhancedFilePreview(fileInfo, index) {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'file-preview-item';
+        previewItem.style.animationDelay = `${index * 0.1}s`;
         
         const previewContent = this.getPreviewContent(fileInfo);
         
-        preview.innerHTML = `
+        previewItem.innerHTML = `
             ${previewContent}
-            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
-                    onclick="contentUI.removeFile('${fileInfo.id}')" title="Remove">
+            <div class="file-info">
+                <div class="file-name" title="${fileInfo.name}">${fileInfo.name}</div>
+                <div class="file-size">${this.formatFileSize(fileInfo.size)}</div>
+            </div>
+            <button type="button" class="remove-file" 
+                    onclick="contentUI.removeFile('${fileInfo.id}')" 
+                    title="Remove file">
                 <i class="fas fa-times"></i>
             </button>
         `;
         
-        return preview;
+        // Add click handler for preview modal
+        previewItem.addEventListener('click', (e) => {
+            if (!e.target.closest('.remove-file')) {
+                this.previewFile(fileInfo.url, fileInfo.name, fileInfo.type);
+            }
+        });
+        
+        return previewItem;
+    }
+
+    getPreviewContent(fileInfo) {
+        switch (fileInfo.type) {
+            case 'image':
+                return `<img src="${fileInfo.url}" alt="${fileInfo.name}" loading="lazy">`;
+            case 'video':
+                return `
+                    <video src="${fileInfo.url}" preload="metadata" muted>
+                        Your browser does not support video preview.
+                    </video>
+                `;
+            case 'audio':
+                return `
+                    <audio src="${fileInfo.url}" preload="metadata" controls>
+                        Your browser does not support audio preview.
+                    </audio>
+                `;
+            case 'document':
+                return `
+                    <div class="document-preview">
+                        <i class="fas fa-file-pdf fa-3x text-danger mb-2"></i>
+                        <div class="document-info">
+                            <strong>PDF Document</strong>
+                            <div class="document-name">${fileInfo.name}</div>
+                            <small>${this.formatFileSize(fileInfo.size)}</small>
+                        </div>
+                    </div>
+                `;
+            default:
+                return `
+                    <div class="unknown-preview">
+                        <i class="fas fa-file fa-3x text-muted mb-2"></i>
+                        <div class="file-name">${fileInfo.name}</div>
+                        <small>${this.formatFileSize(fileInfo.size)}</small>
+                    </div>
+                `;
+        }
+    }
+
+    removeFile(fileId) {
+        this.uploadedFiles = this.uploadedFiles.filter(file => file.id !== fileId);
+        this.updateFileTypeCounts();
+        this.refreshFilePreview();
+        this.updateFileCount();
+    }
+
+    clearAllFiles() {
+        this.uploadedFiles = [];
+        this.resetFileTypeCounts();
+        this.refreshFilePreview();
+        this.updateFileCount();
+        this.showToast('All files cleared', 'info');
+    }
+
+    refreshFilePreview() {
+        const preview = document.getElementById('filePreviewGrid');
+        if (!preview) return;
+        
+        preview.innerHTML = '';
+        this.uploadedFiles.forEach((fileInfo, index) => {
+            const previewItem = this.createEnhancedFilePreview(fileInfo, index);
+            preview.appendChild(previewItem);
+        });
+    }
+
+    // Preview mode toggle
+    togglePreviewMode(mode) {
+        this.previewMode = mode;
+        const preview = document.getElementById('filePreviewGrid');
+        if (!preview) return;
+        
+        preview.className = mode === 'grid' ? 'file-preview-grid' : 'file-preview-list';
+        this.refreshFilePreview();
+        
+        // Update button states
+        document.querySelectorAll('.btn-group .btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+
+    // Upload progress simulation
+    simulateUploadProgress() {
+        this.isUploading = true;
+        this.uploadProgress = 0;
+        
+        const progressContainer = document.getElementById('uploadProgress');
+        const progressBar = progressContainer.querySelector('.progress-bar');
+        const progressText = progressContainer.querySelector('.progress-text');
+        const statusText = document.getElementById('uploadStatusText');
+        
+        progressContainer.style.display = 'block';
+        
+        const interval = setInterval(() => {
+            this.uploadProgress += Math.random() * 15; // Simulate progress
+            if (this.uploadProgress >= 100) {
+                this.uploadProgress = 100;
+                clearInterval(interval);
+                
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                    this.isUploading = false;
+                    this.showToast('All files uploaded successfully!', 'success');
+                }, 500);
+            }
+            
+            progressBar.style.width = `${this.uploadProgress}%`;
+            progressText.textContent = `${Math.round(this.uploadProgress)}%`;
+            statusText.textContent = this.uploadProgress < 100 ? 'Uploading files...' : 'Upload complete!';
+        }, 200);
+    }
+
+    // Cloud storage optimization
+    optimizeFileForCloud(file) {
+        return {
+            ...file,
+            cloudUrl: this.generateCloudUrl(file),
+            cdnUrl: this.generateCdnUrl(file),
+            thumbnailUrl: this.generateThumbnailUrl(file),
+            optimized: true
+        };
+    }
+
+    generateCloudUrl(file) {
+        // Simulate cloud storage URL generation
+        const timestamp = Date.now();
+        const hash = btoa(file.name + timestamp).replace(/[^a-zA-Z0-9]/g, '');
+        return `https://steam-cdn.example.com/files/${hash}/${file.name}`;
+    }
+
+    generateCdnUrl(file) {
+        // Simulate CDN URL for faster delivery
+        const timestamp = Date.now();
+        return `https://steam-cdn.example.com/cdn/files/${timestamp}/${file.name}`;
+    }
+
+    generateThumbnailUrl(file) {
+        // Simulate thumbnail generation
+        const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+        return `https://steam-cdn.example.com/thumbnails/${nameWithoutExt}.jpg`;
+    }
+
+    // Categories Management Methods
+    showManageCategoriesModal() {
+        this.selectedCategory = null;
+        this.loadCategoriesForManagement();
+        this.updateCategoryStatistics();
+        
+        const modal = new bootstrap.Modal(document.getElementById('manageCategoriesModal'));
+        modal.show();
+    }
+
+    loadCategoriesForManagement() {
+        this.renderCategoriesList();
+        this.populateCategoryDropdown();
+    }
+
+    renderCategoriesList() {
+        const categoriesList = document.getElementById('categoriesList');
+        if (!categoriesList) return;
+        
+        categoriesList.innerHTML = '';
+        
+        Object.entries(this.cms.categories).forEach(([key, category]) => {
+            const categoryItem = document.createElement('div');
+            categoryItem.className = 'category-item';
+            if (this.selectedCategory === key) {
+                categoryItem.classList.add('selected');
+            }
+            
+            categoryItem.innerHTML = `
+                <div class="category-info">
+                    <div class="category-name">${category.name}</div>
+                    <div class="category-key">Key: ${key}</div>
+                </div>
+                <div class="category-actions">
+                    <button type="button" class="btn btn-xs btn-outline-primary" 
+                            onclick="contentUI.editCategory('${key}')" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-xs btn-outline-danger" 
+                            onclick="contentUI.deleteCategory('${key}')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button type="button" class="btn btn-xs btn-outline-info" 
+                            onclick="contentUI.selectCategory('${key}')" title="View Subcategories">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            `;
+            
+            categoriesList.appendChild(categoryItem);
+        });
+    }
+
+    populateCategoryDropdown() {
+        const dropdown = document.getElementById('categoryForSubcategory');
+        if (!dropdown) return;
+        
+        dropdown.innerHTML = '<option value="">Select Category</option>';
+        
+        Object.entries(this.cms.categories).forEach(([key, category]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = category.name;
+            dropdown.appendChild(option);
+        });
+        
+        dropdown.addEventListener('change', (e) => {
+            this.selectedCategory = e.target.value;
+            this.updateSubcategoryButton();
+            this.renderSubcategoriesList();
+        });
+    }
+
+    updateSubcategoryButton() {
+        const button = document.getElementById('addSubcategoryBtn');
+        if (button) {
+            button.disabled = !this.selectedCategory;
+        }
+    }
+
+    renderSubcategoriesList() {
+        const subcategoriesList = document.getElementById('subcategoriesList');
+        if (!subcategoriesList) return;
+        
+        subcategoriesList.innerHTML = '';
+        
+        if (!this.selectedCategory) {
+            subcategoriesList.innerHTML = `
+                <div class="text-muted text-center py-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Select a category to view and manage subcategories
+                </div>
+            `;
+            return;
+        }
+        
+        const category = this.cms.categories[this.selectedCategory];
+        if (!category || !category.subcategories || category.subcategories.length === 0) {
+            subcategoriesList.innerHTML = `
+                <div class="text-muted text-center py-4">
+                    <i class="fas fa-tags me-2"></i>
+                    No subcategories found for ${category.name}
+                </div>
+            `;
+            return;
+        }
+        
+        category.subcategories.forEach((subcategory, index) => {
+            const subcategoryItem = document.createElement('div');
+            subcategoryItem.className = 'subcategory-item';
+            
+            subcategoryItem.innerHTML = `
+                <div class="subcategory-info">
+                    <div class="subcategory-name">${this.formatSubcategoryName(subcategory)}</div>
+                    <div class="subcategory-count">Index: ${index}</div>
+                </div>
+                <div class="subcategory-actions">
+                    <button type="button" class="btn btn-xs btn-outline-primary" 
+                            onclick="contentUI.editSubcategory('${subcategory}')" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-xs btn-outline-danger" 
+                            onclick="contentUI.deleteSubcategory('${subcategory}')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            subcategoriesList.appendChild(subcategoryItem);
+        });
+    }
+
+    updateCategoryStatistics() {
+        const totalCategories = Object.keys(this.cms.categories).length;
+        const totalSubcategories = Object.values(this.cms.categories)
+            .reduce((total, cat) => total + (cat.subcategories ? cat.subcategories.length : 0), 0);
+        const avgSubcategories = totalCategories > 0 ? (totalSubcategories / totalCategories).toFixed(1) : 0;
+        const contentItems = this.cms.contents.length;
+        
+        document.getElementById('totalCategoriesCount').textContent = totalCategories;
+        document.getElementById('totalSubcategoriesCount').textContent = totalSubcategories;
+        document.getElementById('avgSubcategoriesCount').textContent = avgSubcategories;
+        document.getElementById('contentItemsCount').textContent = contentItems;
+    }
+
+    // Category CRUD Operations
+    showAddCategoryForm() {
+        document.getElementById('addCategoryForm').style.display = 'block';
+        document.getElementById('newCategoryName').focus();
+    }
+
+    hideAddCategoryForm() {
+        document.getElementById('addCategoryForm').style.display = 'none';
+        document.getElementById('newCategoryName').value = '';
+        document.getElementById('newCategoryKey').value = '';
+    }
+
+    addCategory() {
+        const name = document.getElementById('newCategoryName').value.trim();
+        const key = document.getElementById('newCategoryKey').value.trim().toLowerCase().replace(/\s+/g, '-');
+        
+        if (!name || !key) {
+            this.showToast('Please enter both category name and key', 'error');
+            return;
+        }
+        
+        if (this.cms.categories[key]) {
+            this.showToast('Category with this key already exists', 'error');
+            return;
+        }
+        
+        this.cms.categories[key] = {
+            name: name,
+            subcategories: []
+        };
+        
+        this.hideAddCategoryForm();
+        this.renderCategoriesList();
+        this.populateCategoryDropdown();
+        this.updateCategoryStatistics();
+        this.loadCategories(); // Update main form categories
+        this.showToast('Category added successfully!', 'success');
+    }
+
+    editCategory(key) {
+        const category = this.cms.categories[key];
+        if (!category) return;
+        
+        const newName = prompt('Edit category name:', category.name);
+        if (newName && newName.trim()) {
+            category.name = newName.trim();
+            this.renderCategoriesList();
+            this.populateCategoryDropdown();
+            this.updateCategoryStatistics();
+            this.loadCategories();
+            this.showToast('Category updated successfully!', 'success');
+        }
+    }
+
+    deleteCategory(key) {
+        const category = this.cms.categories[key];
+        if (!category) return;
+        
+        if (!confirm(`Are you sure you want to delete "${category.name}"? This will also remove all subcategories.`)) {
+            return;
+        }
+        
+        delete this.cms.categories[key];
+        this.renderCategoriesList();
+        this.populateCategoryDropdown();
+        this.updateCategoryStatistics();
+        this.loadCategories();
+        this.showToast('Category deleted successfully!', 'success');
+    }
+
+    selectCategory(key) {
+        this.selectedCategory = key;
+        document.getElementById('categoryForSubcategory').value = key;
+        this.updateSubcategoryButton();
+        this.renderCategoriesList();
+        this.renderSubcategoriesList();
+    }
+
+    // Subcategory CRUD Operations
+    showAddSubcategoryForm() {
+        if (!this.selectedCategory) return;
+        document.getElementById('addSubcategoryForm').style.display = 'block';
+        document.getElementById('newSubcategoryName').focus();
+    }
+
+    hideAddSubcategoryForm() {
+        document.getElementById('addSubcategoryForm').style.display = 'none';
+        document.getElementById('newSubcategoryName').value = '';
+    }
+
+    addSubcategory() {
+        const name = document.getElementById('newSubcategoryName').value.trim();
+        if (!name) {
+            this.showToast('Please enter subcategory name', 'error');
+            return;
+        }
+        
+        const category = this.cms.categories[this.selectedCategory];
+        if (!category) return;
+        
+        const key = name.toLowerCase().replace(/\s+/g, '-');
+        if (category.subcategories.includes(key)) {
+            this.showToast('Subcategory already exists', 'error');
+            return;
+        }
+        
+        category.subcategories.push(key);
+        this.hideAddSubcategoryForm();
+        this.renderSubcategoriesList();
+        this.updateCategoryStatistics();
+        this.loadCategories();
+        this.showToast('Subcategory added successfully!', 'success');
+    }
+
+    editSubcategory(oldKey) {
+        const category = this.cms.categories[this.selectedCategory];
+        if (!category) return;
+        
+        const currentName = this.formatSubcategoryName(oldKey);
+        const newName = prompt('Edit subcategory name:', currentName);
+        
+        if (newName && newName.trim()) {
+            const newKey = newName.trim().toLowerCase().replace(/\s+/g, '-');
+            const index = category.subcategories.indexOf(oldKey);
+            
+            if (index !== -1) {
+                category.subcategories[index] = newKey;
+                this.renderSubcategoriesList();
+                this.updateCategoryStatistics();
+                this.loadCategories();
+                this.showToast('Subcategory updated successfully!', 'success');
+            }
+        }
+    }
+
+    deleteSubcategory(key) {
+        const category = this.cms.categories[this.selectedCategory];
+        if (!category) return;
+        
+        if (!confirm(`Are you sure you want to delete "${this.formatSubcategoryName(key)}"?`)) {
+            return;
+        }
+        
+        const index = category.subcategories.indexOf(key);
+        if (index !== -1) {
+            category.subcategories.splice(index, 1);
+            this.renderSubcategoriesList();
+            this.updateCategoryStatistics();
+            this.loadCategories();
+            this.showToast('Subcategory deleted successfully!', 'success');
+        }
+    }
+
+    exportCategories() {
+        const categoriesData = JSON.stringify(this.cms.categories, null, 2);
+        const blob = new Blob([categoriesData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'categories-export.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        this.showToast('Categories exported successfully!', 'success');
+    }
+
+    checkUrlParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('manageCategories') === 'true') {
+            // Open categories modal after a short delay to ensure page is loaded
+            setTimeout(() => {
+                this.showManageCategoriesModal();
+            }, 500);
+        }
     }
 
     createBulkFilePreview(fileInfo) {
@@ -556,10 +1206,12 @@ class ContentManagementUI {
         
         try {
             if (this.currentEditingContent) {
-                this.cms.updateContent(this.currentEditingContent.id, formData);
+                const updatedContent = this.cms.updateContent(this.currentEditingContent.id, formData);
+                this.updateSearchIndex(this.currentEditingContent.id, updatedContent);
                 this.showToast('Content updated successfully!', 'success');
             } else {
-                this.cms.createContent(formData);
+                const newContent = this.cms.createContent(formData);
+                this.updateSearchIndex(newContent.id, newContent);
                 this.showToast('Content created successfully!', 'success');
             }
             
@@ -657,7 +1309,8 @@ class ContentManagementUI {
         delete duplicatedContent.createdAt;
         delete duplicatedContent.updatedAt;
 
-        this.cms.createContent(duplicatedContent);
+        const newContent = this.cms.createContent(duplicatedContent);
+        this.updateSearchIndex(newContent.id, newContent);
         this.renderContent();
         this.showToast('Content duplicated successfully!', 'success');
     }
@@ -665,6 +1318,7 @@ class ContentManagementUI {
     deleteContent(contentId) {
         if (confirm('Are you sure you want to delete this content?')) {
             this.cms.deleteContent(contentId);
+            this.removeFromSearchIndex(contentId);
             this.renderContent();
             this.showToast('Content deleted successfully!', 'success');
         }
@@ -771,19 +1425,225 @@ class ContentManagementUI {
         }
     }
 
-    // Filtering
+    // Advanced Filtering with Search Index
     applyFilters() {
-        const filters = {
-            search: document.getElementById('searchInput').value,
-            state: document.getElementById('stateFilter').value,
-            categories: Array.from(document.getElementById('categoryFilter').selectedOptions)
+        const startTime = performance.now();
+        
+        // Collect all filter values
+        this.currentFilters = {
+            search: document.getElementById('searchInput')?.value?.toLowerCase() || '',
+            state: document.getElementById('stateFilter')?.value || '',
+            categories: Array.from(document.getElementById('categoryFilter')?.selectedOptions || [])
                 .map(option => option.value),
-            gradeLevels: document.getElementById('gradeFilter').value ? 
-                [document.getElementById('gradeFilter').value] : []
+            gradeLevels: document.getElementById('gradeFilter')?.value ? 
+                [document.getElementById('gradeFilter').value] : [],
+            fileType: document.getElementById('fileTypeFilter')?.value || '',
+            subcategories: Array.from(document.getElementById('subcategoryFilter')?.selectedOptions || [])
+                .map(option => option.value),
+            dateRange: document.getElementById('dateRangeFilter')?.value || '',
+            dateFrom: document.getElementById('dateFrom')?.value || '',
+            dateTo: document.getElementById('dateTo')?.value || '',
+            featured: document.getElementById('featuredFilter')?.value || '',
+            sortBy: document.getElementById('sortBy')?.value || 'updatedAt-desc'
         };
 
-        const filteredContent = this.cms.filterContent(filters);
+        // Apply filters using search index for performance
+        const filteredContent = this.performAdvancedSearch();
+        
+        // Update UI
         this.renderContent(filteredContent);
+        this.updateSearchResults(filteredContent.length, performance.now() - startTime);
+        this.updateSubcategoryFilter();
+    }
+
+    performAdvancedSearch() {
+        let results = [];
+        
+        // Use search index for fast filtering
+        for (const [contentId, indexData] of this.searchIndex) {
+            if (this.passesAllFilters(indexData)) {
+                const content = this.cms.getContent(contentId);
+                if (content) {
+                    results.push(content);
+                }
+            }
+        }
+        
+        // Apply sorting
+        return this.sortResults(results, this.currentFilters.sortBy);
+    }
+
+    passesAllFilters(indexData) {
+        // Search filter (title, description, tags)
+        if (this.currentFilters.search) {
+            const searchTerm = this.currentFilters.search;
+            const inTitle = indexData.title.includes(searchTerm);
+            const inDescription = indexData.description.includes(searchTerm);
+            const inTags = indexData.tags.some(tag => tag.includes(searchTerm));
+            
+            if (!inTitle && !inDescription && !inTags) {
+                return false;
+            }
+        }
+        
+        // State filter
+        if (this.currentFilters.state && indexData.state !== this.currentFilters.state) {
+            return false;
+        }
+        
+        // Categories filter
+        if (this.currentFilters.categories.length > 0) {
+            const hasCategory = this.currentFilters.categories.some(cat => 
+                indexData.categories.includes(cat));
+            if (!hasCategory) return false;
+        }
+        
+        // Grade levels filter
+        if (this.currentFilters.gradeLevels.length > 0) {
+            const hasGradeLevel = this.currentFilters.gradeLevels.some(grade => 
+                indexData.gradeLevels.includes(grade));
+            if (!hasGradeLevel) return false;
+        }
+        
+        // File type filter
+        if (this.currentFilters.fileType) {
+            if (!indexData.fileTypes.includes(this.currentFilters.fileType)) {
+                return false;
+            }
+        }
+        
+        // Subcategories filter
+        if (this.currentFilters.subcategories.length > 0) {
+            const hasSubcategory = this.currentFilters.subcategories.some(sub => 
+                indexData.subcategories.includes(sub));
+            if (!hasSubcategory) return false;
+        }
+        
+        // Date range filter
+        if (!this.passesDateFilter(indexData)) {
+            return false;
+        }
+        
+        // Featured filter
+        if (this.currentFilters.featured) {
+            if (this.currentFilters.featured === 'featured' && !indexData.featured) {
+                return false;
+            }
+            if (this.currentFilters.featured === 'not-featured' && indexData.featured) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    passesDateFilter(indexData) {
+        if (!this.currentFilters.dateRange) return true;
+        
+        const now = new Date();
+        const contentDate = new Date(indexData.updatedAt);
+        
+        switch (this.currentFilters.dateRange) {
+            case 'today':
+                return contentDate.toDateString() === now.toDateString();
+            case 'week':
+                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                return contentDate >= weekAgo;
+            case 'month':
+                const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                return contentDate >= monthAgo;
+            case 'quarter':
+                const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                return contentDate >= quarterAgo;
+            case 'year':
+                const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+                return contentDate >= yearAgo;
+            case 'custom':
+                if (this.currentFilters.dateFrom) {
+                    const fromDate = new Date(this.currentFilters.dateFrom);
+                    if (contentDate < fromDate) return false;
+                }
+                if (this.currentFilters.dateTo) {
+                    const toDate = new Date(this.currentFilters.dateTo);
+                    toDate.setHours(23, 59, 59, 999); // End of day
+                    if (contentDate > toDate) return false;
+                }
+                return true;
+            default:
+                return true;
+        }
+    }
+
+    sortResults(results, sortBy) {
+        const sorted = [...results];
+        
+        switch (sortBy) {
+            case 'updatedAt-desc':
+                return sorted.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+            case 'createdAt-desc':
+                return sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            case 'title-asc':
+                return sorted.sort((a, b) => a.title.localeCompare(b.title));
+            case 'title-desc':
+                return sorted.sort((a, b) => b.title.localeCompare(a.title));
+            case 'state-asc':
+                return sorted.sort((a, b) => a.state.localeCompare(b.state));
+            default:
+                return sorted;
+        }
+    }
+
+    updateSearchResults(count, searchTime) {
+        document.getElementById('resultCount').textContent = count;
+        
+        if (searchTime > 0) {
+            document.getElementById('searchTime').textContent = 
+                `(${searchTime.toFixed(1)}ms)`;
+        } else {
+            document.getElementById('searchTime').textContent = '';
+        }
+    }
+
+    updateSubcategoryFilter() {
+        const selectedCategories = this.currentFilters.categories;
+        const subcategoryFilter = document.getElementById('subcategoryFilter');
+        
+        if (!subcategoryFilter) return;
+        
+        // Clear current options
+        subcategoryFilter.innerHTML = '<option value="">All Subcategories</option>';
+        
+        if (selectedCategories.length === 0) return;
+        
+        // Get all subcategories from selected categories
+        const allSubcategories = new Set();
+        selectedCategories.forEach(categoryKey => {
+            const category = this.cms.categories[categoryKey];
+            if (category && category.subcategories) {
+                category.subcategories.forEach(sub => {
+                    allSubcategories.add(sub);
+                });
+            }
+        });
+        
+        // Add options to subcategory filter
+        Array.from(allSubcategories).sort().forEach(subcategory => {
+            const option = document.createElement('option');
+            option.value = subcategory;
+            option.textContent = this.formatSubcategoryName(subcategory);
+            subcategoryFilter.appendChild(option);
+        });
+    }
+
+    handleDateRangeChange(value) {
+        const customDateRange = document.getElementById('customDateRange');
+        if (!customDateRange) return;
+        
+        if (value === 'custom') {
+            customDateRange.style.display = 'block';
+        } else {
+            customDateRange.style.display = 'none';
+        }
     }
 
     // File preview
@@ -1012,5 +1872,124 @@ window.selectAllSubcategories = () => {
 window.clearAllSubcategories = () => {
     if (window.contentUI) {
         window.contentUI.clearAllSubcategories();
+    }
+};
+
+// Global functions for advanced filtering
+window.toggleAdvancedFilters = () => {
+    if (window.contentUI) {
+        const advancedFilters = document.getElementById('advancedFilters');
+        if (advancedFilters) {
+            if (advancedFilters.style.display === 'none') {
+                advancedFilters.style.display = 'block';
+                event.target.innerHTML = '<i class="fas fa-cog me-1"></i>Basic';
+            } else {
+                advancedFilters.style.display = 'none';
+                event.target.innerHTML = '<i class="fas fa-cog me-1"></i>Advanced';
+            }
+        }
+    }
+};
+
+window.resetFilters = () => {
+    if (window.contentUI) {
+        // Reset all filter fields
+        document.getElementById('searchInput').value = '';
+        document.getElementById('stateFilter').value = '';
+        document.getElementById('categoryFilter').selectedIndex = -1;
+        document.getElementById('gradeFilter').value = '';
+        document.getElementById('fileTypeFilter').value = '';
+        document.getElementById('subcategoryFilter').value = '';
+        document.getElementById('dateRangeFilter').value = '';
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        document.getElementById('featuredFilter').value = '';
+        document.getElementById('sortBy').value = 'updatedAt-desc';
+        
+        // Hide custom date range
+        const customDateRange = document.getElementById('customDateRange');
+        if (customDateRange) {
+            customDateRange.style.display = 'none';
+        }
+        
+        // Apply empty filters
+        window.contentUI.applyFilters();
+    }
+};
+
+window.handleSearchKeyup = (event) => {
+    if (window.contentUI) {
+        // Support Enter key for search
+        if (event.key === 'Enter') {
+            window.contentUI.applyFilters();
+        }
+    }
+};
+
+// Global functions for advanced file management
+window.clearAllFiles = () => {
+    if (window.contentUI) {
+        window.contentUI.clearAllFiles();
+    }
+};
+
+window.togglePreviewMode = (mode) => {
+    if (window.contentUI) {
+        window.contentUI.togglePreviewMode(mode);
+    }
+};
+
+window.simulateUploadProgress = () => {
+    if (window.contentUI) {
+        window.contentUI.simulateUploadProgress();
+    }
+};
+
+// Global functions for categories management
+window.showManageCategoriesModal = () => {
+    if (window.contentUI) {
+        window.contentUI.showManageCategoriesModal();
+    }
+};
+
+window.showAddCategoryForm = () => {
+    if (window.contentUI) {
+        window.contentUI.showAddCategoryForm();
+    }
+};
+
+window.hideAddCategoryForm = () => {
+    if (window.contentUI) {
+        window.contentUI.hideAddCategoryForm();
+    }
+};
+
+window.addCategory = () => {
+    if (window.contentUI) {
+        window.contentUI.addCategory();
+    }
+};
+
+window.showAddSubcategoryForm = () => {
+    if (window.contentUI) {
+        window.contentUI.showAddSubcategoryForm();
+    }
+};
+
+window.hideAddSubcategoryForm = () => {
+    if (window.contentUI) {
+        window.contentUI.hideAddSubcategoryForm();
+    }
+};
+
+window.addSubcategory = () => {
+    if (window.contentUI) {
+        window.contentUI.addSubcategory();
+    }
+};
+
+window.exportCategories = () => {
+    if (window.contentUI) {
+        window.contentUI.exportCategories();
     }
 };
