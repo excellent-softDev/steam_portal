@@ -311,6 +311,51 @@
     transform: translateY(0);
 }
 
+/* Login Help Section */
+.login-help {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: rgba(52, 152, 219, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(52, 152, 219, 0.1);
+}
+
+.default-credentials {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.default-credentials small {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.btn-quick-login {
+    width: 100%;
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-quick-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(243, 156, 18, 0.3);
+    background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+}
+
+.btn-quick-login:active {
+    transform: translateY(0);
+}
+
 .login-footer {
     text-align: center;
     border-top: 1px solid #e9ecef;
