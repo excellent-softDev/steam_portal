@@ -1240,9 +1240,35 @@
             </div>
         </div>
 
-        <!-- Content Grid -->
-        <div class="row" id="contentGrid">
-            <!-- Content cards will be dynamically generated -->
+        <!-- Content Datatable -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="contentTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th width="40">
+                            <input type="checkbox" class="form-check-input" id="selectAllCheckbox">
+                        </th>
+                        <th>Title</th>
+                        <th>Categories</th>
+                        <th>Grade Level</th>
+                        <th>State</th>
+                        <th>Featured</th>
+                        <th>Files</th>
+                        <th>Updated</th>
+                        <th width="120">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="contentTableBody">
+                    <!-- Content rows will be dynamically generated -->
+                </tbody>
+            </table>
+            
+            <!-- Empty state -->
+            <div id="emptyContentState" class="text-center py-5 d-none">
+                <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No content found</h4>
+                <p class="text-muted">Start by adding your first educational content</p>
+            </div>
         </div>
     </div>
 

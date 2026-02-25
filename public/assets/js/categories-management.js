@@ -286,7 +286,6 @@ class CategoriesManagementUI {
 
     // Subcategory CRUD Operations
     showAddSubcategoryForm() {
-        if (!this.selectedCategory) return;
         document.getElementById('addSubcategoryForm').style.display = 'block';
         document.getElementById('newSubcategoryName').focus();
     }
@@ -297,14 +296,24 @@ class CategoriesManagementUI {
     }
 
     addSubcategory() {
+        const categoryId = document.getElementById('categoryForSubcategory').value;
         const name = document.getElementById('newSubcategoryName').value.trim();
+        
+        if (!categoryId) {
+            this.showToast('Please select a category first', 'error');
+            return;
+        }
+        
         if (!name) {
             this.showToast('Please enter subcategory name', 'error');
             return;
         }
         
-        const category = this.cms.categories[this.selectedCategory];
-        if (!category) return;
+        const category = this.cms.categories[categoryId];
+        if (!category) {
+            this.showToast('Selected category not found', 'error');
+            return;
+        }
         
         const key = name.toLowerCase().replace(/\s+/g, '-');
         if (category.subcategories.includes(key)) {
@@ -320,6 +329,7 @@ class CategoriesManagementUI {
         this.cms.saveCategories();
         this.hideAddSubcategoryForm();
         this.renderSubcategoriesList();
+        this.renderCategoriesList(); // Update category count
         this.updateStatistics();
         this.showToast('Subcategory added successfully!', 'success');
     }

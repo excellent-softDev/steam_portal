@@ -40,6 +40,7 @@ class ContentManagementUI {
         this.loadCategories();
         this.buildSearchIndex();
         this.renderContent();
+        this.updateStatistics();
         
         // Check if we should open categories modal
         this.checkUrlParameters();
@@ -110,50 +111,110 @@ class ContentManagementUI {
 
     initializeEventListeners() {
         // Search and filters
-        document.getElementById('searchInput').addEventListener('input', this.debounce(() => this.applyFilters(), 300));
-        document.getElementById('stateFilter').addEventListener('change', () => this.applyFilters());
-        document.getElementById('categoryFilter').addEventListener('change', () => this.applyFilters());
-        document.getElementById('gradeFilter').addEventListener('change', () => this.applyFilters());
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', this.debounce(() => this.applyFilters(), 300));
+        }
+        
+        const stateFilter = document.getElementById('stateFilter');
+        if (stateFilter) {
+            stateFilter.addEventListener('change', () => this.applyFilters());
+        }
+        
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', () => this.applyFilters());
+        }
+        
+        const gradeFilter = document.getElementById('gradeFilter');
+        if (gradeFilter) {
+            gradeFilter.addEventListener('change', () => this.applyFilters());
+        }
         
         // Advanced filters
-        document.getElementById('fileTypeFilter').addEventListener('change', () => this.applyFilters());
-        document.getElementById('subcategoryFilter').addEventListener('change', () => this.applyFilters());
-        document.getElementById('dateRangeFilter').addEventListener('change', (e) => {
-            this.handleDateRangeChange(e.target.value);
-            this.applyFilters();
-        });
-        document.getElementById('dateFrom').addEventListener('change', () => this.applyFilters());
-        document.getElementById('dateTo').addEventListener('change', () => this.applyFilters());
-        document.getElementById('featuredFilter').addEventListener('change', () => this.applyFilters());
-        document.getElementById('sortBy').addEventListener('change', () => this.applyFilters());
+        const fileTypeFilter = document.getElementById('fileTypeFilter');
+        if (fileTypeFilter) {
+            fileTypeFilter.addEventListener('change', () => this.applyFilters());
+        }
+        
+        const subcategoryFilter = document.getElementById('subcategoryFilter');
+        if (subcategoryFilter) {
+            subcategoryFilter.addEventListener('change', () => this.applyFilters());
+        }
+        
+        const dateRangeFilter = document.getElementById('dateRangeFilter');
+        if (dateRangeFilter) {
+            dateRangeFilter.addEventListener('change', (e) => {
+                this.handleDateRangeChange(e.target.value);
+                this.applyFilters();
+            });
+        }
+        
+        const dateFrom = document.getElementById('dateFrom');
+        if (dateFrom) {
+            dateFrom.addEventListener('change', () => this.applyFilters());
+        }
+        
+        const dateTo = document.getElementById('dateTo');
+        if (dateTo) {
+            dateTo.addEventListener('change', () => this.applyFilters());
+        }
+        
+        const featuredFilter = document.getElementById('featuredFilter');
+        if (featuredFilter) {
+            featuredFilter.addEventListener('change', () => this.applyFilters());
+        }
+        
+        const sortBy = document.getElementById('sortBy');
+        if (sortBy) {
+            sortBy.addEventListener('change', () => this.applyFilters());
+        }
 
         // File upload
         const fileUploadArea = document.getElementById('fileUploadArea');
         const fileInput = document.getElementById('fileInput');
         
-        fileUploadArea.addEventListener('click', () => fileInput.click());
-        fileUploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
-        fileUploadArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
-        fileUploadArea.addEventListener('drop', this.handleFileDrop.bind(this));
-        fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+        if (fileUploadArea && fileInput) {
+            fileUploadArea.addEventListener('click', () => fileInput.click());
+            fileUploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
+            fileUploadArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
+            fileUploadArea.addEventListener('drop', this.handleFileDrop.bind(this));
+            fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+        }
 
         // Bulk upload
         const bulkDropZone = document.getElementById('bulkDropZone');
         const bulkFileInput = document.getElementById('bulkFileInput');
         
-        bulkDropZone.addEventListener('dragover', this.handleDragOver.bind(this));
-        bulkDropZone.addEventListener('dragleave', this.handleDragLeave.bind(this));
-        bulkDropZone.addEventListener('drop', this.handleBulkFileDrop.bind(this));
-        bulkFileInput.addEventListener('change', this.handleBulkFileSelect.bind(this));
+        if (bulkDropZone && bulkFileInput) {
+            bulkDropZone.addEventListener('dragover', this.handleDragOver.bind(this));
+            bulkDropZone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+            bulkDropZone.addEventListener('drop', this.handleBulkFileDrop.bind(this));
+            bulkFileInput.addEventListener('change', this.handleBulkFileSelect.bind(this));
+        }
 
         // Category selection
-        document.getElementById('contentCategories').addEventListener('change', this.updateSubcategories.bind(this));
+        const contentCategories = document.getElementById('contentCategories');
+        if (contentCategories) {
+            contentCategories.addEventListener('change', this.updateSubcategories.bind(this));
+        }
 
         // Form submission
-        document.getElementById('contentForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveContent();
-        });
+        const contentForm = document.getElementById('contentForm');
+        if (contentForm) {
+            contentForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveContent();
+            });
+        }
+
+        // Select all checkbox
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', () => {
+                this.toggleSelectAll();
+            });
+        }
     }
 
     // Load categories into selects
@@ -314,30 +375,116 @@ class ContentManagementUI {
         }
     }
 
-    // Render content grid
+    // Render content datatable
     renderContent(contents = null) {
-        const contentGrid = document.getElementById('contentGrid');
+        const contentTableBody = document.getElementById('contentTableBody');
+        const emptyState = document.getElementById('emptyContentState');
+        const contentTable = document.getElementById('contentTable');
         const contentToRender = contents || this.cms.contents;
         
-        contentGrid.innerHTML = '';
+        // Clear existing content
+        contentTableBody.innerHTML = '';
         
         if (contentToRender.length === 0) {
-            contentGrid.innerHTML = `
-                <div class="col-12 text-center py-5">
-                    <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
-                    <h4 class="text-muted">No content found</h4>
-                    <p class="text-muted">Start by adding your first educational content</p>
-                </div>
-            `;
+            contentTable.style.display = 'none';
+            emptyState.classList.remove('d-none');
+            this.updateStatistics();
             return;
         }
-
+        
+        contentTable.style.display = 'table';
+        emptyState.classList.add('d-none');
+        
         contentToRender.forEach(content => {
-            const contentCard = this.createContentCard(content);
-            contentGrid.appendChild(contentCard);
+            const row = this.createContentRow(content);
+            contentTableBody.appendChild(row);
         });
 
-        this.initializeDragAndDrop();
+        this.updateStatistics();
+    }
+
+    // Create content datatable row
+    createContentRow(content) {
+        const row = document.createElement('tr');
+        row.dataset.contentId = content.id;
+        
+        // Selection checkbox
+        const selectedCell = document.createElement('td');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'form-check-input content-checkbox';
+        checkbox.checked = this.selectedContents.has(content.id);
+        checkbox.addEventListener('change', () => this.toggleContentSelection(content.id));
+        selectedCell.appendChild(checkbox);
+        
+        // Title
+        const titleCell = document.createElement('td');
+        titleCell.innerHTML = `
+            <div class="fw-bold">${content.title}</div>
+            <div class="text-muted small">${this.truncateText(content.description || '', 50)}</div>
+        `;
+        
+        // Categories
+        const categoriesCell = document.createElement('td');
+        const categoriesHtml = content.categories.map(catKey => {
+            const category = this.cms.categories[catKey];
+            return category ? `<span class="badge bg-secondary me-1">${category.name}</span>` : '';
+        }).join('');
+        categoriesCell.innerHTML = categoriesHtml || '<span class="text-muted">None</span>';
+        
+        // Grade Level
+        const gradeCell = document.createElement('td');
+        gradeCell.innerHTML = `<span class="badge bg-info">${this.getGradeLevelName(content.gradeLevel)}</span>`;
+        
+        // State
+        const stateCell = document.createElement('td');
+        const stateClass = content.state === 'published' ? 'success' : content.state === 'archived' ? 'warning' : 'secondary';
+        stateCell.innerHTML = `<span class="badge bg-${stateClass}">${content.state}</span>`;
+        
+        // Featured
+        const featuredCell = document.createElement('td');
+        featuredCell.innerHTML = content.featured ? 
+            '<i class="fas fa-star text-warning"></i>' : 
+            '<i class="far fa-star text-muted"></i>';
+        
+        // Files
+        const filesCell = document.createElement('td');
+        const fileCount = content.files ? content.files.length : 0;
+        filesCell.innerHTML = `<span class="badge bg-primary">${fileCount} file${fileCount !== 1 ? 's' : ''}</span>`;
+        
+        // Updated date
+        const updatedCell = document.createElement('td');
+        const updatedDate = new Date(content.updatedAt).toLocaleDateString();
+        updatedCell.innerHTML = `<small class="text-muted">${updatedDate}</small>`;
+        
+        // Actions
+        const actionsCell = document.createElement('td');
+        actionsCell.innerHTML = `
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-primary" onclick="window.contentUI.editContent('${content.id}')" title="Edit">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-outline-warning" onclick="window.contentUI.duplicateContent('${content.id}')" title="Duplicate">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button class="btn btn-outline-danger" onclick="window.contentUI.deleteContent('${content.id}')" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        
+        // Append all cells
+        row.appendChild(selectedCell);
+        row.appendChild(titleCell);
+        row.appendChild(categoriesCell);
+        row.appendChild(gradeCell);
+        row.appendChild(stateCell);
+        row.appendChild(featuredCell);
+        row.appendChild(filesCell);
+        row.appendChild(updatedCell);
+        row.appendChild(actionsCell);
+        
+        return row;
     }
 
     // Create content card
@@ -716,6 +863,20 @@ class ContentManagementUI {
         this.updateFileCount();
     }
 
+    updateFileTypeCounts() {
+        // Reset counts
+        this.currentFileTypeCounts = { video: 0, document: 0, audio: 0, image: 0 };
+        
+        // Count files by type
+        this.uploadedFiles.forEach(file => {
+            if (this.currentFileTypeCounts.hasOwnProperty(file.type)) {
+                this.currentFileTypeCounts[file.type]++;
+            }
+        });
+        
+        this.updateFileTypeLimits();
+    }
+
     clearAllFiles() {
         this.uploadedFiles = [];
         this.resetFileTypeCounts();
@@ -988,6 +1149,9 @@ class ContentManagementUI {
             subcategories: []
         };
         
+        // Save to localStorage
+        this.cms.saveCategories();
+        
         this.hideAddCategoryForm();
         this.renderCategoriesList();
         this.populateCategoryDropdown();
@@ -1003,6 +1167,8 @@ class ContentManagementUI {
         const newName = prompt('Edit category name:', category.name);
         if (newName && newName.trim()) {
             category.name = newName.trim();
+            // Save to localStorage
+            this.cms.saveCategories();
             this.renderCategoriesList();
             this.populateCategoryDropdown();
             this.updateCategoryStatistics();
@@ -1020,6 +1186,8 @@ class ContentManagementUI {
         }
         
         delete this.cms.categories[key];
+        // Save to localStorage
+        this.cms.saveCategories();
         this.renderCategoriesList();
         this.populateCategoryDropdown();
         this.updateCategoryStatistics();
@@ -1064,6 +1232,8 @@ class ContentManagementUI {
         }
         
         category.subcategories.push(key);
+        // Save to localStorage
+        this.cms.saveCategories();
         this.hideAddSubcategoryForm();
         this.renderSubcategoriesList();
         this.updateCategoryStatistics();
@@ -1084,6 +1254,8 @@ class ContentManagementUI {
             
             if (index !== -1) {
                 category.subcategories[index] = newKey;
+                // Save to localStorage
+                this.cms.saveCategories();
                 this.renderSubcategoriesList();
                 this.updateCategoryStatistics();
                 this.loadCategories();
@@ -1103,6 +1275,8 @@ class ContentManagementUI {
         const index = category.subcategories.indexOf(key);
         if (index !== -1) {
             category.subcategories.splice(index, 1);
+            // Save to localStorage
+            this.cms.saveCategories();
             this.renderSubcategoriesList();
             this.updateCategoryStatistics();
             this.loadCategories();
@@ -1133,6 +1307,37 @@ class ContentManagementUI {
             setTimeout(() => {
                 this.showManageCategoriesModal();
             }, 500);
+        }
+    }
+
+    updateStatistics() {
+        const contents = this.cms.contents;
+        
+        // Total content
+        const totalElement = document.getElementById('totalContentCount');
+        if (totalElement) {
+            totalElement.textContent = contents.length;
+        }
+        
+        // Published content
+        const publishedCount = contents.filter(c => c.state === 'published').length;
+        const publishedElement = document.getElementById('publishedContentCount');
+        if (publishedElement) {
+            publishedElement.textContent = publishedCount;
+        }
+        
+        // Draft content
+        const draftCount = contents.filter(c => c.state === 'draft').length;
+        const draftElement = document.getElementById('draftContentCount');
+        if (draftElement) {
+            draftElement.textContent = draftCount;
+        }
+        
+        // Featured content
+        const featuredCount = contents.filter(c => c.featured && c.state === 'published').length;
+        const featuredElement = document.getElementById('featuredContentCount');
+        if (featuredElement) {
+            featuredElement.textContent = featuredCount;
         }
     }
 
@@ -1217,6 +1422,7 @@ class ContentManagementUI {
             
             this.closeModal();
             this.renderContent();
+            this.updateStatistics();
         } catch (error) {
             this.showToast('Error saving content: ' + error.message, 'error');
         }
@@ -1312,6 +1518,7 @@ class ContentManagementUI {
         const newContent = this.cms.createContent(duplicatedContent);
         this.updateSearchIndex(newContent.id, newContent);
         this.renderContent();
+        this.updateStatistics();
         this.showToast('Content duplicated successfully!', 'success');
     }
 
@@ -1320,6 +1527,7 @@ class ContentManagementUI {
             this.cms.deleteContent(contentId);
             this.removeFromSearchIndex(contentId);
             this.renderContent();
+            this.updateStatistics();
             this.showToast('Content deleted successfully!', 'success');
         }
     }
@@ -1358,6 +1566,7 @@ class ContentManagementUI {
             this.showToast(`${uploadedContents.length} contents uploaded successfully!`, 'success');
             this.closeBulkUploadModal();
             this.renderContent();
+            this.updateStatistics();
         } catch (error) {
             this.showToast('Error uploading content: ' + error.message, 'error');
         }
@@ -1370,28 +1579,84 @@ class ContentManagementUI {
         } else {
             this.selectedContents.add(contentId);
         }
-        
-        this.updateBulkActions();
+        this.updateSelectionUI();
     }
 
-    updateBulkActions() {
-        const bulkActions = document.getElementById('bulkActions');
-        const selectedCount = document.getElementById('selectedCount');
+    toggleSelectAll() {
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const contentCheckboxes = document.querySelectorAll('.content-checkbox');
         
+        if (selectAllCheckbox.checked) {
+            // Select all
+            contentCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+                const row = checkbox.closest('tr');
+                if (row) {
+                    this.selectedContents.add(row.dataset.contentId);
+                }
+            });
+        } else {
+            // Deselect all
+            contentCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            this.selectedContents.clear();
+        }
+        
+        this.updateSelectionUI();
+    }
+
+    updateSelectionUI() {
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const selectedCount = document.getElementById('selectedCount');
+        const bulkActions = document.getElementById('bulkActions');
+        const contentCheckboxes = document.querySelectorAll('.content-checkbox');
+        
+        // Update selected count
+        selectedCount.textContent = this.selectedContents.size;
+        
+        // Show/hide bulk actions
         if (this.selectedContents.size > 0) {
             bulkActions.classList.remove('d-none');
-            selectedCount.textContent = this.selectedContents.size;
         } else {
             bulkActions.classList.add('d-none');
+        }
+        
+        // Update select all checkbox state
+        const totalCheckboxes = contentCheckboxes.length;
+        const checkedCheckboxes = document.querySelectorAll('.content-checkbox:checked').length;
+        
+        if (totalCheckboxes === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes === totalCheckboxes) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
         }
     }
 
     clearSelection() {
         this.selectedContents.clear();
-        document.querySelectorAll('.content-card input[type="checkbox"]').forEach(checkbox => {
+        
+        // Clear all checkboxes in datatable
+        document.querySelectorAll('.content-checkbox').forEach(checkbox => {
             checkbox.checked = false;
         });
-        this.updateBulkActions();
+        
+        // Clear select all checkbox
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+        
+        this.updateSelectionUI();
     }
 
     bulkAssignCategories() {
@@ -1405,6 +1670,7 @@ class ContentManagementUI {
         this.showToast(`${results.length} contents published!`, 'success');
         this.clearSelection();
         this.renderContent();
+        this.updateStatistics();
     }
 
     bulkArchive() {
@@ -1413,6 +1679,7 @@ class ContentManagementUI {
         this.showToast(`${results.length} contents archived!`, 'success');
         this.clearSelection();
         this.renderContent();
+        this.updateStatistics();
     }
 
     bulkDelete() {
@@ -1422,6 +1689,7 @@ class ContentManagementUI {
             this.showToast(`${contentIds.length} contents deleted!`, 'success');
             this.clearSelection();
             this.renderContent();
+            this.updateStatistics();
         }
     }
 
@@ -1806,37 +2074,102 @@ class ContentManagementUI {
     }
 }
 
-// Global functions for inline event handlers
+// Global functions for HTML onclick handlers
 window.contentUI = null;
+
+// Helper function to wait for UI initialization
+function waitForUI(callback, maxRetries = 10, functionName = 'unknown') {
+    let retries = 0;
+    
+    function tryCallback() {
+        if (window.contentUI) {
+            callback();
+        } else if (retries < maxRetries) {
+            retries++;
+            setTimeout(tryCallback, 100);
+        } else {
+            console.error('Content UI failed to initialize after retries');
+            // Fallback for critical functions
+            if (functionName === 'showModal' || functionName === 'showContentModal') {
+                const modal = new bootstrap.Modal(document.getElementById('contentModal'));
+                modal.show();
+            }
+        }
+    }
+    
+    tryCallback();
+}
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing content UI...');
     
-    // Ensure CMS is loaded
-    if (typeof steamCMS !== 'undefined') {
-        window.steamCMS.loadFromStorage();
-        console.log('CMS loaded:', window.steamCMS);
-        window.contentUI = new ContentManagementUI();
-    } else {
-        console.error('CMS not loaded!');
-    }
+    // Wait a bit for all scripts to fully load
+    setTimeout(() => {
+        // Ensure CMS is loaded and data is loaded from storage
+        if (typeof steamCMS !== 'undefined') {
+            window.steamCMS.loadFromStorage();
+            console.log('CMS loaded:', window.steamCMS);
+            console.log('Categories loaded:', window.steamCMS.categories);
+            console.log('Contents loaded:', window.steamCMS.contents);
+            window.contentUI = new ContentManagementUI();
+            console.log('Content UI initialized:', window.contentUI);
+        } else {
+            console.error('CMS not loaded!');
+        }
+    }, 100);
 });
 
 // Global functions for HTML onclick handlers
-window.showContentModal = () => window.contentUI.showModal();
+window.showContentModal = () => {
+    waitForUI(() => {
+        window.contentUI.showModal();
+    }, 10, 'showContentModal');
+};
 window.showBulkUploadModal = () => {
     const modal = new bootstrap.Modal(document.getElementById('bulkUploadModal'));
     modal.show();
 };
-window.saveContent = () => window.contentUI.saveContent();
-window.processBulkUpload = () => window.contentUI.processBulkUpload();
-window.applyFilters = () => window.contentUI.applyFilters();
-window.clearSelection = () => window.contentUI.clearSelection();
-window.bulkAssignCategories = () => window.contentUI.bulkAssignCategories();
-window.bulkPublish = () => window.contentUI.bulkPublish();
-window.bulkArchive = () => window.contentUI.bulkArchive();
-window.bulkDelete = () => window.contentUI.bulkDelete();
+window.saveContent = () => {
+    if (window.contentUI) {
+        window.contentUI.saveContent();
+    }
+};
+window.processBulkUpload = () => {
+    if (window.contentUI) {
+        window.contentUI.processBulkUpload();
+    }
+};
+window.applyFilters = () => {
+    if (window.contentUI) {
+        window.contentUI.applyFilters();
+    }
+};
+window.clearSelection = () => {
+    if (window.contentUI) {
+        window.contentUI.clearSelection();
+    }
+};
+window.bulkAssignCategories = () => {
+    if (window.contentUI) {
+        window.contentUI.bulkAssignCategories();
+    }
+};
+window.bulkPublish = () => {
+    if (window.contentUI) {
+        window.contentUI.bulkPublish();
+    }
+};
+window.bulkArchive = () => {
+    if (window.contentUI) {
+        window.contentUI.bulkArchive();
+    }
+};
+window.bulkDelete = () => {
+    if (window.contentUI) {
+        window.contentUI.bulkDelete();
+    }
+};
 
 // Debug function
 window.debugCategories = () => {

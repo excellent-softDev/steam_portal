@@ -306,21 +306,22 @@
                     
                     <!-- Add Subcategory Form -->
                     <div id="addSubcategoryForm" class="mb-3" style="display: none;">
-                        <form onsubmit="return false;">
-                            <div class="input-group">
-                                <select class="form-select" id="subcategoryCategory" required>
-                                    <option value="">Select category...</option>
-                                </select>
-                                <input type="text" class="form-control" id="subcategoryName" 
-                                       placeholder="Enter subcategory name..." required>
-                                <button class="btn btn-primary" type="button" onclick="addSubcategory()">
-                                    <i class="fas fa-plus me-1"></i>Add
-                                </button>
-                                <button class="btn btn-outline-secondary" type="button" onclick="hideAddSubcategoryForm()">
-                                    <i class="fas fa-times me-1"></i>Cancel
-                                </button>
-                            </div>
-                        </form>
+                        <div class="mb-3">
+                            <label class="form-label">Select Category</label>
+                            <select class="form-select" id="categoryForSubcategory" required>
+                                <option value="">Select a category...</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="newSubcategoryName" 
+                                   placeholder="Enter subcategory name...">
+                            <button class="btn btn-success" onclick="addSubcategory()">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-secondary" onclick="hideAddSubcategoryForm()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="subcategories-list" id="subcategoriesList">

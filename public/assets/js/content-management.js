@@ -360,6 +360,23 @@ class ContentManagementSystem {
         };
     }
 
+    // Bulk update content state
+    bulkUpdateState(contentIds, newState) {
+        const updatedContents = [];
+        
+        contentIds.forEach(contentId => {
+            const content = this.getContent(contentId);
+            if (content) {
+                content.state = newState;
+                content.updatedAt = new Date().toISOString();
+                updatedContents.push(content);
+            }
+        });
+
+        this.saveContents();
+        return updatedContents;
+    }
+
     // Import data
     importData(data) {
         if (data.categories) {
