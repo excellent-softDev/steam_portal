@@ -1,68 +1,74 @@
 // STEAM Portal Content Management System
 class ContentManagementSystem {
     constructor() {
-        this.categories = this.initializeCategories();
+        this.categories = {}; // Will be loaded from database
         this.contents = [];
         this.initializeStorage();
+        this.loadCategoriesFromDatabase();
     }
 
-    // Initialize STEAM categories and subcategories
-    initializeCategories() {
+    // Load categories and subcategories from database
+    async loadCategoriesFromDatabase() {
+        try {
+            // Load categories from database
+            const categoriesResponse = await fetch('/api/categories');
+            const categoriesData = await categoriesResponse.json();
+            
+            if (categoriesData.success) {
+                // Initialize categories object
+                this.categories = {};
+                
+                // Load each category and its subcategories
+                for (const category of categoriesData.data) {
+                    this.categories[category.id] = {
+                        name: category.name,
+                        subcategories: []
+                    };
+                }
+                
+                // Load subcategories for each category
+                const subcategoriesResponse = await fetch('/api/subcategories');
+                const subcategoriesData = await subcategoriesResponse.json();
+                
+                if (subcategoriesData.success) {
+                    subcategoriesData.data.forEach(subcategory => {
+                        if (this.categories[subcategory.category_id]) {
+                            this.categories[subcategory.category_id].subcategories.push(subcategory.id);
+                        }
+                    });
+                }
+                
+                console.log('Categories loaded from database:', this.categories);
+            }
+        } catch (error) {
+            console.error('Error loading categories from database:', error);
+            // Fallback to hardcoded categories if database fails
+            this.categories = this.getFallbackCategories();
+        }
+    }
+
+    // Fallback categories if database fails
+    getFallbackCategories() {
         return {
-            'mathematics': {
+            'math': {
                 name: 'Mathematics',
-                subcategories: [
-                    'algebra',
-                    'geometry', 
-                    'statistics',
-                    'calculus',
-                    'arithmetic',
-                    'trigonometry'
-                ]
+                subcategories: ['algebra', 'geometry', 'calculus']
             },
             'science': {
                 name: 'Science',
-                subcategories: [
-                    'physics',
-                    'chemistry',
-                    'biology',
-                    'earth-science',
-                    'environmental-science',
-                    'astronomy'
-                ]
+                subcategories: ['physics', 'chemistry', 'biology']
             },
-            'arts-creativity': {
-                name: 'Arts & Creativity',
-                subcategories: [
-                    'visual-arts',
-                    'music',
-                    'drama',
-                    'dance',
-                    'digital-art',
-                    'creative-writing'
-                ]
-            },
-            'language-arts': {
-                name: 'Language Arts',
-                subcategories: [
-                    'reading',
-                    'writing',
-                    'grammar',
-                    'literature',
-                    'poetry',
-                    'public-speaking'
-                ]
+            'arts': {
+                name: 'Arts',
+                subcategories: ['painting', 'music', 'sculpture']
             },
             'technology': {
                 name: 'Technology',
-                subcategories: [
-                    'computer-science',
-                    'coding',
-                    'robotics',
-                    'digital-literacy',
-                    'web-development',
-                    'artificial-intelligence'
-                ]
+                subcategories: ['programming', 'web-dev', 'robotics']
+            },
+            'engineering': {
+                name: 'Engineering',
+                subcategories: ['mechanical', 'civil', 'electrical']
             }
         };
     }

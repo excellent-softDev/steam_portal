@@ -1,7 +1,20 @@
-// Content Management UI Controller
+// Content Management UI Controller - Database Compatible Version
 class ContentManagementUI {
     constructor() {
-        this.cms = steamCMS;
+        // Wait for CMS to be ready before initializing
+        this.initializeWhenCMSReady();
+    }
+
+    async initializeWhenCMSReady() {
+        // Wait for steamCMS to be available and loaded
+        while (!window.steamCMS || !window.steamCMS.isLoaded) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        console.log('CMS is ready, initializing UI...');
+
+        // Now initialize the UI
+        this.cms = window.steamCMS;
         this.selectedContents = new Set();
         this.currentEditingContent = null;
         this.uploadedFiles = [];
@@ -37,13 +50,16 @@ class ContentManagementUI {
         this.editingSubcategory = null;
         
         this.initializeEventListeners();
-        this.loadCategories();
         this.buildSearchIndex();
         this.renderContent();
         this.updateStatistics();
+        this.loadCategories(); // Load categories into dropdowns
         
         // Check if we should open categories modal
         this.checkUrlParameters();
+        
+        console.log('Content Management UI initialized with database CMS');
+        console.log('Available categories:', Object.keys(this.cms.categories));
     }
 
     // Search Indexing for Performance
@@ -217,9 +233,9 @@ class ContentManagementUI {
         }
     }
 
-    // Load categories into selects
+    // Load categories into selects (Database Compatible)
     loadCategories() {
-        console.log('Loading categories...', this.cms.categories);
+        console.log('Loading categories from database...', this.cms.categories);
         
         const categorySelects = [
             'categoryFilter',
@@ -1084,18 +1100,22 @@ class ContentManagementUI {
             const subcategoryItem = document.createElement('div');
             subcategoryItem.className = 'subcategory-item';
             
+            // Handle both string format (old) and object format (database)
+            const subId = typeof subcategory === 'string' ? subcategory : subcategory.id;
+            const subName = typeof subcategory === 'string' ? this.formatSubcategoryName(subcategory) : subcategory.name;
+            
             subcategoryItem.innerHTML = `
                 <div class="subcategory-info">
-                    <div class="subcategory-name">${this.formatSubcategoryName(subcategory)}</div>
-                    <div class="subcategory-count">Index: ${index}</div>
+                    <div class="subcategory-name">${subName}</div>
+                    <div class="subcategory-count">ID: ${subId}</div>
                 </div>
                 <div class="subcategory-actions">
                     <button type="button" class="btn btn-xs btn-outline-primary" 
-                            onclick="contentUI.editSubcategory('${subcategory}')" title="Edit">
+                            onclick="contentUI.editSubcategory('${subId}')" title="Edit">
                         <i class="fas fa-edit"></i>
                     </button>
                     <button type="button" class="btn btn-xs btn-outline-danger" 
-                            onclick="contentUI.deleteSubcategory('${subcategory}')" title="Delete">
+                            onclick="contentUI.deleteSubcategory('${subId}')" title="Delete">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -1130,7 +1150,7 @@ class ContentManagementUI {
         document.getElementById('newCategoryKey').value = '';
     }
 
-    addCategory() {
+    async addCategory() {
         const name = document.getElementById('newCategoryName').value.trim();
         const key = document.getElementById('newCategoryKey').value.trim().toLowerCase().replace(/\s+/g, '-');
         
@@ -1144,20 +1164,44 @@ class ContentManagementUI {
             return;
         }
         
-        this.cms.categories[key] = {
-            name: name,
-            subcategories: []
-        };
-        
-        // Save to localStorage
-        this.cms.saveCategories();
-        
-        this.hideAddCategoryForm();
-        this.renderCategoriesList();
-        this.populateCategoryDropdown();
-        this.updateCategoryStatistics();
-        this.loadCategories(); // Update main form categories
-        this.showToast('Category added successfully!', 'success');
+        try {
+            // Add category to database
+            const response = await fetch('/api/categories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: key,
+                    name: name,
+                    description: '',
+                    icon: 'fa-folder',
+                    color: '#00B2FF'
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update local CMS object
+                this.cms.categories[key] = {
+                    name: name,
+                    subcategories: []
+                };
+                
+                this.hideAddCategoryForm();
+                this.renderCategoriesList();
+                this.populateCategoryDropdown();
+                this.updateCategoryStatistics();
+                this.loadCategories(); // Update main form categories
+                this.showToast('Category added successfully!', 'success');
+            } else {
+                this.showToast('Error adding category: ' + data.error, 'error');
+            }
+        } catch (error) {
+            console.error('Error adding category:', error);
+            this.showToast('Error adding category', 'error');
+        }
     }
 
     editCategory(key) {
@@ -1215,7 +1259,7 @@ class ContentManagementUI {
         document.getElementById('newSubcategoryName').value = '';
     }
 
-    addSubcategory() {
+    async addSubcategory() {
         const name = document.getElementById('newSubcategoryName').value.trim();
         if (!name) {
             this.showToast('Please enter subcategory name', 'error');
@@ -1225,20 +1269,47 @@ class ContentManagementUI {
         const category = this.cms.categories[this.selectedCategory];
         if (!category) return;
         
-        const key = name.toLowerCase().replace(/\s+/g, '-');
-        if (category.subcategories.includes(key)) {
-            this.showToast('Subcategory already exists', 'error');
-            return;
-        }
+        const id = name.toLowerCase().replace(/\s+/g, '-');
         
-        category.subcategories.push(key);
-        // Save to localStorage
-        this.cms.saveCategories();
-        this.hideAddSubcategoryForm();
-        this.renderSubcategoriesList();
-        this.updateCategoryStatistics();
-        this.loadCategories();
-        this.showToast('Subcategory added successfully!', 'success');
+        try {
+            // Add subcategory to database
+            const response = await fetch('/api/subcategories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: id,
+                    name: name,
+                    category_id: this.selectedCategory,
+                    description: ''
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update local CMS object
+                if (!category.subcategories) {
+                    category.subcategories = [];
+                }
+                category.subcategories.push({
+                    id: id,
+                    name: name
+                });
+                
+                this.hideAddSubcategoryForm();
+                this.renderSubcategoriesList();
+                this.updateCategoryStatistics();
+                this.loadCategories(); // Update main form categories
+                this.showToast('Subcategory added successfully!', 'success');
+            } else {
+                this.showToast('Error adding subcategory: ' + data.error, 'error');
+            }
+        } catch (error) {
+            console.error('Error adding subcategory:', error);
+            this.showToast('Error adding subcategory', 'error');
+        }
     }
 
     editSubcategory(oldKey) {
@@ -2100,24 +2171,34 @@ function waitForUI(callback, maxRetries = 10, functionName = 'unknown') {
     tryCallback();
 }
 
-// Initialize when DOM is loaded
+// Initialize when DOM is loaded - Database Compatible Version
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing content UI...');
     
-    // Wait a bit for all scripts to fully load
-    setTimeout(() => {
-        // Ensure CMS is loaded and data is loaded from storage
-        if (typeof steamCMS !== 'undefined') {
-            window.steamCMS.loadFromStorage();
-            console.log('CMS loaded:', window.steamCMS);
+    // Wait for database CMS to be ready
+    const waitForCMS = () => {
+        console.log('Checking CMS status...');
+        console.log('window.steamCMS exists:', !!window.steamCMS);
+        console.log('window.steamCMS.isLoaded:', window.steamCMS?.isLoaded);
+        console.log('window.steamCMS object:', window.steamCMS);
+        
+        if (window.steamCMS && window.steamCMS.isLoaded) {
+            console.log('Database CMS loaded:', window.steamCMS);
             console.log('Categories loaded:', window.steamCMS.categories);
             console.log('Contents loaded:', window.steamCMS.contents);
+            
+            // Initialize the UI now that CMS is ready
             window.contentUI = new ContentManagementUI();
-            console.log('Content UI initialized:', window.contentUI);
+            console.log('Content UI initialized with database CMS:', window.contentUI);
         } else {
-            console.error('CMS not loaded!');
+            // CMS not ready yet, wait and try again
+            console.log('Waiting for CMS to load...');
+            setTimeout(waitForCMS, 100);
         }
-    }, 100);
+    };
+    
+    // Start waiting for CMS
+    waitForCMS();
 });
 
 // Global functions for HTML onclick handlers
@@ -2297,9 +2378,9 @@ window.hideAddCategoryForm = () => {
     }
 };
 
-window.addCategory = () => {
+window.addCategory = async () => {
     if (window.contentUI) {
-        window.contentUI.addCategory();
+        await window.contentUI.addCategory();
     }
 };
 
@@ -2315,9 +2396,9 @@ window.hideAddSubcategoryForm = () => {
     }
 };
 
-window.addSubcategory = () => {
+window.addSubcategory = async () => {
     if (window.contentUI) {
-        window.contentUI.addSubcategory();
+        await window.contentUI.addSubcategory();
     }
 };
 
