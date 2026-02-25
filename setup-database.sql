@@ -33,6 +33,16 @@ CREATE TABLE categories (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Create subcategories table
+CREATE TABLE subcategories (
+  id VARCHAR(50) PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  category_id VARCHAR(20) NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Create content table
 CREATE TABLE content (
   id VARCHAR(50) PRIMARY KEY,
@@ -88,6 +98,24 @@ INSERT INTO categories (id, name, icon, color) VALUES
 ('arts', 'Arts', 'fa-palette', '#e74c3c'),
 ('technology', 'Technology', 'fa-laptop', '#9b59b6'),
 ('engineering', 'Engineering', 'fa-cogs', '#95a5a6');
+
+-- Insert sample data into subcategories
+INSERT INTO subcategories (id, name, category_id) VALUES
+('algebra', 'Algebra', 'math'),
+('geometry', 'Geometry', 'math'),
+('calculus', 'Calculus', 'math'),
+('physics', 'Physics', 'science'),
+('chemistry', 'Chemistry', 'science'),
+('biology', 'Biology', 'science'),
+('painting', 'Painting', 'arts'),
+('music', 'Music', 'arts'),
+('sculpture', 'Sculpture', 'arts'),
+('programming', 'Programming', 'technology'),
+('web-dev', 'Web Development', 'technology'),
+('robotics', 'Robotics', 'technology'),
+('mechanical', 'Mechanical Engineering', 'engineering'),
+('civil', 'Civil Engineering', 'engineering'),
+('electrical', 'Electrical Engineering', 'engineering');
 
 -- Insert sample data into file_categories
 INSERT INTO file_categories (id, name, icon, color) VALUES

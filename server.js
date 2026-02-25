@@ -481,6 +481,78 @@ app.get('/api/categories', async (req, res) => {
   }
 });
 
+// Subcategories endpoints
+app.get('/api/subcategories', async (req, res) => {
+  try {
+    const { category_id } = req.query;
+    let query = `
+      SELECT s.*, c.name as category_name 
+      FROM subcategories s 
+      LEFT JOIN categories c ON s.category_id = c.id
+    `;
+    let params = [];
+    
+    if (category_id) {
+      query += ' WHERE s.category_id = ?';
+      params = [category_id];
+    }
+    
+    query += ' ORDER BY s.name';
+    
+    const [rows] = await db.execute(query, params);
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/subcategories', async (req, res) => {
+  try {
+    const { id, name, category_id, description } = req.body;
+    
+    if (!id || !name || !category_id) {
+      return res.status(400).json({ success: false, error: 'ID, name, and category_id are required' });
+    }
+    
+    await db.execute(
+      'INSERT INTO subcategories (id, name, category_id, description) VALUES (?, ?, ?, ?)',
+      [id, name, category_id, description || null]
+    );
+    
+    res.json({ success: true, data: { id, name, category_id, description } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/subcategories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, category_id, description } = req.body;
+    
+    await db.execute(
+      'UPDATE subcategories SET name = ?, category_id = ?, description = ? WHERE id = ?',
+      [name, category_id, description, id]
+    );
+    
+    res.json({ success: true, data: { id, name, category_id, description } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/subcategories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    await db.execute('DELETE FROM subcategories WHERE id = ?', [id]);
+    
+    res.json({ success: true, message: 'Subcategory deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is running perfectly!' });

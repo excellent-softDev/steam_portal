@@ -62,6 +62,19 @@ async function setupDatabase() {
     `);
     console.log('✅ Created categories table');
     
+    // Create subcategories table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS subcategories (
+        id VARCHAR(50) PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        category_id VARCHAR(20) NOT NULL,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log('✅ Created subcategories table');
+    
     // Create content table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS content (
@@ -149,6 +162,34 @@ async function setupDatabase() {
       }
     }
     console.log('✅ Inserted categories data');
+    
+    // Insert sample subcategories
+    const subcategories = [
+      ['algebra', 'Algebra', 'math'],
+      ['geometry', 'Geometry', 'math'],
+      ['calculus', 'Calculus', 'math'],
+      ['physics', 'Physics', 'science'],
+      ['chemistry', 'Chemistry', 'science'],
+      ['biology', 'Biology', 'science'],
+      ['painting', 'Painting', 'arts'],
+      ['music', 'Music', 'arts'],
+      ['sculpture', 'Sculpture', 'arts'],
+      ['programming', 'Programming', 'technology'],
+      ['web-dev', 'Web Development', 'technology'],
+      ['robotics', 'Robotics', 'technology'],
+      ['mechanical', 'Mechanical Engineering', 'engineering'],
+      ['civil', 'Civil Engineering', 'engineering'],
+      ['electrical', 'Electrical Engineering', 'engineering']
+    ];
+
+    for (const [id, name, categoryId] of subcategories) {
+      try {
+        await connection.execute('INSERT IGNORE INTO subcategories (id, name, category_id) VALUES (?, ?, ?)', [id, name, categoryId]);
+      } catch (e) {
+        // Ignore duplicate errors
+      }
+    }
+    console.log('✅ Inserted subcategories data');
     
     // Insert file categories
     const fileCategories = [
