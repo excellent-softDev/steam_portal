@@ -10,10 +10,10 @@ const PORT = process.env.PORT || 3000;
 
 // Database config
 const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'steamlms'
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'steam_db'
 };
 
 // Middleware
@@ -22,6 +22,24 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Set security headers (disabled for development)
+app.use((req, res, next) => {
+  // Comment out CSP for development to avoid browser extension conflicts
+  // res.setHeader('Content-Security-Policy', 
+  //   "default-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+  //   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
+  //   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; " +
+  //   "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; " +
+  //   "img-src 'self' data: https: http:; " +
+  //   "connect-src 'self' http://localhost:3000 ws://localhost:3000 https: http:; " +
+  //   "media-src 'self' https: http:; " +
+  //   "object-src 'none'; " +
+  //   "base-uri 'self'; " +
+  //   "form-action 'self';"
+  // );
+  next();
+});
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -471,6 +489,26 @@ app.get('/api/health', (req, res) => {
 // Admin redirect
 app.get('/admin', (req, res) => {
   res.redirect('/admin.html');
+});
+
+// Auth login page
+app.get('/auth-login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'auth-login.html'));
+});
+
+// Admin dashboard page (without .html extension)
+app.get('/admin-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-dashboard.html'));
+});
+
+// Admin content management page (without .html extension)
+app.get('/admin-content-management', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-content-management.html'));
+});
+
+// Admin categories management page (without .html extension)
+app.get('/admin-categories-management', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-categories-management.html'));
 });
 
 // Error handling middleware

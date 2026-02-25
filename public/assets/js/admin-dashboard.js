@@ -313,7 +313,7 @@ class AdminDashboard {
     // Dashboard action methods
     manageCategories() {
         // Navigate to dedicated categories management page
-        window.location.href = 'admin-categories-management.html';
+        window.location.href = '/admin-categories-management';
     }
 
     viewUsers() {

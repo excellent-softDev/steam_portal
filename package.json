@@ -4,8 +4,10 @@
   "description": "A bootstrap 5 theme",
   "main": "public/index.html",
   "scripts": {
-    "start": "npx serve public",
-    "dev": "npx serve public"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "setup-db": "node setup-database.js",
+    "init-project": "npm install && npm run setup-db && npm start"
   },
   "keywords": [],
   "author": "",
